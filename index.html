@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Rooted — Cultural Roots, Global Wellness</title>
+<meta name="description" content="A culturally-adaptive eco-fitness platform with a Sustainability Quotient engine, a health-concern wellness advisor, and an in-house cultural practice library across India, Mexico, Japan and Costa Rica." />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">R</span>
+    <div class="brand-text">
+      <span class="brand-name">Rooted</span>
+      <span class="brand-tag">Cultural Roots. Global Wellness.</span>
+    </div>
+  </div>
+
+  <nav class="tabs" role="tablist" aria-label="Main sections">
+    <button class="tab-btn active" role="tab" aria-selected="true" data-tab="home">Home</button>
+    <button class="tab-btn" role="tab" aria-selected="false" data-tab="prototype">Prototype</button>
+    <button class="tab-btn" role="tab" aria-selected="false" data-tab="advisor">Wellness Advisor</button>
+    <button class="tab-btn" role="tab" aria-selected="false" data-tab="community">Community Hub</button>
+    <button class="tab-btn" role="tab" aria-selected="false" data-tab="dashboard">Dashboard</button>
+    <button class="tab-btn" role="tab" aria-selected="false" data-tab="team">Team</button>
+  </nav>
+
+  <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+    <span class="icon-sun">&#9728;</span><span class="icon-moon">&#9789;</span>
+  </button>
+</header>
+
+<main>
+
+  <!-- HOME -->
+  <section id="tab-home" class="tab-panel active">
+    <div class="hero">
+      <h1>Wellness has roots. Fitness should honor them.</h1>
+      <p class="lede">
+        Global fitness platforms treat the world as one market: the same routines, the same gear,
+        the same generic "wellness content" from Mumbai to Osaka. <strong>Rooted</strong> starts from
+        the opposite premise — every country already has centuries of wellness wisdom, and the most
+        sustainable fitness product is the one that revives it instead of replacing it.
+      </p>
+      <p class="lede">
+        Rooted pairs each user's workouts with the wellness heritage of their region, scores the
+        environmental footprint of how they train with a proprietary <strong>Sustainability
+        Quotient (SQ)</strong>, and points people describing an everyday health concern toward a
+        culturally-rooted practice worth trying — backed by an in-house Cultural Practice Library,
+        not marketing copy.
+      </p>
+      <div class="hero-ctas">
+        <button class="btn btn-primary" data-goto="prototype">Try the SQ Prototype</button>
+        <button class="btn btn-ghost" data-goto="advisor">Ask the Wellness Advisor</button>
+        <a class="btn btn-ghost" href="performance-analyzer/index.html" target="_blank" rel="noopener">Open Athlyze — Performance Analyzer ↗</a>
+      </div>
+    </div>
+
+    <div class="sister-app-banner">
+      <div>
+        <strong>Also from this project: Athlyze.</strong>
+        <p>A standalone sports-performance analytics app — log workouts across any sport, track personal
+        bests, and see progress trends over time. Separate site, no account needed, opens in a new tab.</p>
+      </div>
+      <a class="btn btn-primary btn-small" href="performance-analyzer/index.html" target="_blank" rel="noopener">Launch Athlyze ↗</a>
+    </div>
+
+    <div class="country-strip" id="country-strip"></div>
+
+    <div class="pillars">
+      <div class="pillar-card">
+        <h3>Cultural Wellness Engine</h3>
+        <p>Matches every workout to a local practice — Ayurvedic recovery in India, temazcal-inspired
+        breathwork in Mexico, shinrin-yoku forest walks in Japan, Pura Vida gratitude rituals in Costa Rica.</p>
+      </div>
+      <div class="pillar-card">
+        <h3>Sustainability Quotient</h3>
+        <p>A transparent, weighted score (0–100) built from gear choice, travel mode, and post-workout
+        resource use — not a black box, a formula students and judges can audit line by line.</p>
+      </div>
+      <div class="pillar-card">
+        <h3>Wellness Advisor</h3>
+        <p>Describe an everyday health concern — stress, poor sleep, low energy, aches — and get a
+        culturally-rooted practice to try from each region, plus clear guidance on when to see a
+        real professional instead.</p>
+      </div>
+      <div class="pillar-card">
+        <h3>Community Wellness Hub</h3>
+        <p>An in-house Cultural Practice Library plus Community Connect — create or join a group with
+        people training toward the same practice, city or goal. No outside organizations involved;
+        everything here is Rooted's own content and your own community.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROTOTYPE -->
+  <section id="tab-prototype" class="tab-panel">
+    <h1>Sustainability Quotient Prototype</h1>
+    <p class="section-note">
+      Select a country and describe one workout. The engine computes an SQ score from four weighted
+      inputs, assigns a tier, and recommends a local cultural wellness practice to pair with it.
+    </p>
+
+    <div class="prototype-grid">
+      <form id="sq-form" class="sq-form">
+        <label>
+          Country
+          <select id="sq-country" name="country" required></select>
+        </label>
+
+        <label>
+          Workout type
+          <select id="sq-workout" name="workout" required></select>
+        </label>
+
+        <label>
+          Gear used
+          <select id="sq-gear" name="gear" required></select>
+        </label>
+
+        <label>
+          Travel to workout
+          <select id="sq-travel" name="travel" required></select>
+        </label>
+
+        <label>
+          Post-workout resource use
+          <select id="sq-recovery" name="recovery" required></select>
+        </label>
+
+        <button type="submit" class="btn btn-primary">Calculate SQ Score</button>
+      </form>
+
+      <div id="sq-result" class="sq-result" aria-live="polite">
+        <p class="sq-placeholder">Your Sustainability Quotient will appear here.</p>
+      </div>
+    </div>
+
+    <details class="formula-disclosure">
+      <summary>How is the score calculated?</summary>
+      <div id="formula-explainer"></div>
+    </details>
+  </section>
+
+  <!-- WELLNESS ADVISOR -->
+  <section id="tab-advisor" class="tab-panel">
+    <h1>Wellness Advisor</h1>
+    <p class="section-note">
+      Describe an everyday health concern in your own words. The advisor matches it against a small
+      knowledge base of common, non-emergency wellness concerns and suggests a culturally-rooted
+      practice from each region worth trying.
+    </p>
+    <div class="disclaimer-banner">
+      <strong>Not medical advice.</strong> This tool offers general wellness suggestions only — it
+      cannot diagnose or treat any condition. For persistent, severe or worsening symptoms, or any
+      emergency, contact a licensed healthcare professional or local emergency services.
+    </div>
+
+    <form id="advisor-form" class="advisor-form">
+      <label>
+        What's going on?
+        <textarea id="advisor-input" rows="4" placeholder="e.g. I've been really stressed and not sleeping well lately..." required></textarea>
+      </label>
+      <label class="advisor-country-label">
+        Focus on one region (optional)
+        <select id="advisor-country">
+          <option value="all">All regions</option>
+        </select>
+      </label>
+      <button type="submit" class="btn btn-primary">Get Suggestions</button>
+    </form>
+
+    <div id="advisor-result" class="advisor-result" aria-live="polite">
+      <p class="sq-placeholder">Your suggestions will appear here.</p>
+    </div>
+  </section>
+
+  <!-- COMMUNITY -->
+  <section id="tab-community" class="tab-panel">
+    <h1>Community Wellness Hub</h1>
+
+    <section class="connect-block">
+      <div class="connect-head">
+        <div>
+          <h2>Connect With People In Your Community</h2>
+          <p class="section-note">
+            Sign in with your real Google account, start a community around a practice, city or goal,
+            then invite others with a shareable link or a short code. Communities are stored in a real,
+            shared backend (Firebase) — anyone with their own Google account can create or join one from
+            their own device, and membership updates live for everyone in it. See the README for how the
+            project owner sets up the free backend before deploying.
+          </p>
+        </div>
+        <div id="auth-area" class="auth-area">
+          <span class="auth-loading">Loading…</span>
+        </div>
+      </div>
+
+      <div id="community-setup-banner" class="disclaimer-banner urgent" hidden></div>
+      <div id="community-error-banner" class="disclaimer-banner urgent" hidden></div>
+      <div id="invite-banner" class="invite-banner" hidden></div>
+
+      <div class="connect-actions">
+        <button id="create-community-btn" class="btn btn-primary">+ Create a Community</button>
+        <form id="join-community-form" class="join-form">
+          <input id="join-code-input" type="text" placeholder="Have a code? Enter it here" maxlength="8" autocomplete="off" aria-label="Community invite code" />
+          <button type="submit" class="btn btn-ghost">Join</button>
+        </form>
+      </div>
+      <p class="join-hint">Anyone with their own Google account can sign in and join from any device — a link opens the invite directly, a bare code works after signing in too.</p>
+
+      <div class="grid community-connect-grid" id="my-communities-list"></div>
+    </section>
+
+    <h2 class="practice-heading">Cultural Practice Library</h2>
+    <p class="section-note">
+      A self-guided library of cultural wellness practices per region, researched and written in-house
+      by the Rooted team — not run by, or affiliated with, any outside organization. Rooted has no
+      existing partnerships today; nothing here should be read as implying one.
+    </p>
+
+    <div class="filter-row" id="community-filters"></div>
+    <div class="grid community-grid" id="community-list"></div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="tab-dashboard" class="tab-panel">
+    <h1>Impact Dashboard</h1>
+    <p class="section-note">Illustrative six-month pilot data used to demonstrate the analytics layer of the product.</p>
+
+    <div class="stat-tiles" id="stat-tiles"></div>
+
+    <div class="chart-card">
+      <div class="chart-card-head">
+        <h2>Estimated CO₂ Saved by Country (kg, per month)</h2>
+        <button class="btn btn-ghost btn-small" data-table-toggle="co2">View as table</button>
+      </div>
+      <div class="chart-legend" id="co2-legend"></div>
+      <canvas id="co2-chart" width="900" height="360" role="img" aria-label="Grouped bar chart of estimated CO2 saved per country per month"></canvas>
+      <div class="chart-table-wrap" id="co2-table-wrap" hidden></div>
+    </div>
+
+    <div class="chart-card">
+      <div class="chart-card-head">
+        <h2>Relative Market Opportunity Index (0–100, illustrative)</h2>
+        <button class="btn btn-ghost btn-small" data-table-toggle="opportunity">View as table</button>
+      </div>
+      <div class="chart-legend" id="opportunity-legend"></div>
+      <canvas id="opportunity-chart" width="900" height="260" role="img" aria-label="Horizontal bar chart of market opportunity index per country"></canvas>
+      <div class="chart-table-wrap" id="opportunity-table-wrap" hidden></div>
+    </div>
+  </section>
+
+  <!-- TEAM -->
+  <section id="tab-team" class="tab-panel">
+    <h1>Team &amp; Roles</h1>
+    <p class="section-note">Fill in your group's names before submission — five roles mapped to the five RIDS deliverables.</p>
+    <div class="grid team-grid" id="team-grid"></div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>Rooted — Class 12 RIDS group project. The SQ Prototype and Wellness Advisor are transparent,
+  rule-based tools, not AI or medical advice. Also see <a href="performance-analyzer/index.html" target="_blank" rel="noopener">Athlyze</a>,
+  a standalone sports-performance analyzer built alongside this project.</p>
+</footer>
+
+<div id="modal-overlay" class="modal-overlay" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" id="modal-box"></div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="js/firebase-config.js"></script>
+<script src="js/data.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/community.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>

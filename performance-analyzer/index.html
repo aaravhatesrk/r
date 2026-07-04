@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Athlyze — Sports Performance Analyzer</title>
+<meta name="description" content="Log performance metrics across any sport, track personal bests automatically, and see progress trends over time — a standalone, dependency-free analytics tool for athletes." />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">A</span>
+    <div class="brand-text">
+      <span class="brand-name">Athlyze</span>
+      <span class="brand-tag">Performance Analytics for Athletes</span>
+    </div>
+  </div>
+  <a class="back-link" href="../index.html">&larr; Back to Rooted</a>
+  <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+    <span class="icon-sun">&#9728;</span><span class="icon-moon">&#9789;</span>
+  </button>
+</header>
+
+<main>
+
+  <div class="hero">
+    <h1>Every rep, every split, one place.</h1>
+    <p class="lede">
+      Athlyze is a standalone performance log for any sport — running, swimming, cycling, lifting,
+      basketball, football, tennis or anything else you train for. Log a metric, and Athlyze tracks
+      your personal bests and charts your trend automatically. Everything is stored locally in this
+      browser — no account, no server, nothing leaves your device.
+    </p>
+  </div>
+
+  <div class="stat-tiles" id="stat-tiles"></div>
+
+  <section class="plan-block" id="log-section">
+    <h2>Log a performance entry</h2>
+    <p class="section-note">Pick a sport and a metric — presets are pre-filled with sensible units, or choose "Custom metric" for anything not listed.</p>
+    <form id="entry-form" class="entry-form">
+      <div class="entry-form-grid">
+        <label>
+          Sport
+          <select id="entry-sport" required></select>
+        </label>
+        <label id="custom-sport-label" hidden>
+          Custom sport name
+          <input id="entry-custom-sport" type="text" maxlength="40" placeholder="e.g. Rock climbing" />
+        </label>
+        <label>
+          Metric
+          <select id="entry-metric" required></select>
+        </label>
+      </div>
+
+      <div class="entry-form-grid" id="custom-metric-row" hidden>
+        <label>
+          Custom metric name
+          <input id="entry-custom-metric-label" type="text" maxlength="40" placeholder="e.g. Wall-sit hold time" />
+        </label>
+        <label>
+          Unit
+          <input id="entry-custom-metric-unit" type="text" maxlength="16" placeholder="e.g. sec, kg, reps" />
+        </label>
+        <label class="checkbox-label">
+          <input id="entry-custom-metric-direction" type="checkbox" />
+          Lower value is better (e.g. a time)
+        </label>
+      </div>
+
+      <div class="entry-form-grid">
+        <label>
+          Value
+          <input id="entry-value" type="number" step="any" required placeholder="e.g. 24.8" />
+        </label>
+        <label>
+          Date
+          <input id="entry-date" type="date" required />
+        </label>
+        <label>
+          Notes (optional)
+          <input id="entry-notes" type="text" maxlength="120" placeholder="e.g. felt strong, cool morning" />
+        </label>
+      </div>
+
+      <button type="submit" class="btn btn-primary">Log entry</button>
+    </form>
+  </section>
+
+  <section class="plan-block">
+    <div class="section-head-row">
+      <h2>Personal bests</h2>
+      <button id="export-btn" class="btn btn-ghost btn-small">Download log (.xlsx)</button>
+    </div>
+    <p class="section-note">One card per sport + metric you've logged, with the best value on record and how many times you've logged it.</p>
+    <div class="grid pr-grid" id="pr-grid"></div>
+  </section>
+
+  <section class="plan-block">
+    <h2>Progress over time</h2>
+    <p class="section-note">Pick a sport + metric you've logged more than once to see the trend line and the computed improvement since your first entry.</p>
+    <div class="progress-controls">
+      <label>
+        Sport + metric
+        <select id="progress-combo"></select>
+      </label>
+      <span id="progress-trend" class="trend-pill" hidden></span>
+    </div>
+    <div class="chart-card">
+      <div class="chart-legend" id="progress-legend"></div>
+      <canvas id="progress-chart" width="900" height="300" role="img" aria-label="Line chart of performance trend over time"></canvas>
+      <p class="sq-placeholder" id="progress-empty">Log at least two entries for the same sport and metric to see a trend.</p>
+    </div>
+  </section>
+
+  <section class="plan-block">
+    <div class="section-head-row">
+      <h2>History</h2>
+      <label class="filter-inline">
+        Filter by sport
+        <select id="history-filter"></select>
+      </label>
+    </div>
+    <div class="scale-table-wrap">
+      <table class="scale-table" id="history-table"></table>
+    </div>
+    <button id="clear-data-btn" class="btn btn-ghost btn-small clear-btn">Clear all logged data</button>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>Athlyze — a standalone sports-performance analyzer built alongside the <a href="../index.html">Rooted</a>
+  business plan prototype. All data is stored in this browser's <code>localStorage</code> only; nothing is sent
+  to a server. Sample rows are pre-loaded on first visit and can be removed from History.</p>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/xlsx.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
