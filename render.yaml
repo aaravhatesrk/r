@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: rooted
+    runtime: static
+    buildCommand: ""
+    staticPublishPath: .
+    pullRequestPreviewsEnabled: false
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
+
+  - type: web
+    name: athlyze
+    runtime: static
+    buildCommand: ""
+    staticPublishPath: ./performance-analyzer
+    pullRequestPreviewsEnabled: false
+    headers:
+      - path: /*
+        name: Cache-Control
+        value: no-cache
