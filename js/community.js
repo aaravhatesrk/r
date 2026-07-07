@@ -38,8 +38,15 @@ function initFirebase() {
     // each individual request succeeds. Auto-detecting long-polling still
     // negotiates a stream first and can get caught in that same churn;
     // forcing long-polling skips the streaming negotiation entirely, which
-    // is Firestore's documented fix when auto-detect isn't enough.
-    connectState.db.settings({ experimentalForceLongPolling: true });
+    // is Firestore's documented fix when auto-detect isn't enough. Forcing
+    // long-polling alone isn't always enough though: since SDK v9.9 the
+    // long-polling transport itself is implemented with fetch() + a
+    // ReadableStream by default, and the same proxies/antivirus that break
+    // native streaming also break that fetch stream, reproducing the exact
+    // same "client is offline" error. useFetchStreams: false drops back to
+    // plain XHR for long-polling, which those middleboxes don't interfere
+    // with.
+    connectState.db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
     connectState.firebaseReady = true;
     return true;
   } catch (err) {
