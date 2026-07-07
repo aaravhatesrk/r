@@ -379,24 +379,15 @@ function clipSearchUrl(match, km) {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
 }
 
-function renderClip(match, km, uid) {
+function renderClip(match, km) {
   if (km.clipVideoId) {
-    const start = km.clipStart ? `&start=${km.clipStart}` : "";
-    return `
-      <div class="clip-toggle-wrap">
-        <button type="button" class="btn btn-ghost btn-small clip-toggle-btn" data-clip-toggle="${uid}">&#9654; Watch clip</button>
-        <div class="clip-embed" id="clip-${uid}" hidden>
-          <iframe width="100%" height="220" loading="lazy" title="${km.title}"
-            src="https://www.youtube.com/embed/${km.clipVideoId}?autoplay=1${start}"
-            frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
-        </div>
-      </div>`;
+    const start = km.clipStart ? `&t=${km.clipStart}s` : "";
+    return `<a class="btn btn-ghost btn-small clip-toggle-btn" href="https://www.youtube.com/watch?v=${km.clipVideoId}${start}" target="_blank" rel="noopener">&#9654; Watch clip on YouTube</a>`;
   }
   return `<a class="btn btn-ghost btn-small clip-toggle-btn" href="${clipSearchUrl(match, km)}" target="_blank" rel="noopener">&#128269; Find the clip</a>`;
 }
 
 function renderMatchCard(match) {
-  const clipUidBase = `${match.id}-${Math.random().toString(36).slice(2, 7)}`;
   return `
     <div class="match-card">
       <div class="match-score-banner">
@@ -414,7 +405,6 @@ function renderMatchCard(match) {
       <ul class="timeline-list match-timeline vertical-timeline">
         ${match.keyMoments.map((km, i) => {
           const c = categoryById[km.categoryId];
-          const uid = `${clipUidBase}-${i}`;
           return `
             <li class="timeline-item vt-item" style="--c:${categoryColor(km.categoryId)}">
               <div class="vt-dot" style="background:${categoryColor(km.categoryId)}"></div>
@@ -425,7 +415,7 @@ function renderMatchCard(match) {
                 </div>
                 <div class="ti-label">${km.title}</div>
                 <div class="ti-note">${km.note}</div>
-                ${renderClip(match, km, uid)}
+                ${renderClip(match, km)}
               </div>
             </li>`;
         }).join("")}
@@ -447,15 +437,6 @@ function renderMatchCard(match) {
 }
 
 function wireMatchCardInteractions(el) {
-  el.querySelectorAll("[data-clip-toggle]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const uid = btn.dataset.clipToggle;
-      const wrap = document.getElementById(`clip-${uid}`);
-      const opening = wrap.hidden;
-      wrap.hidden = !opening;
-      btn.innerHTML = opening ? "&#9660; Hide clip" : "&#9654; Watch clip";
-    });
-  });
   el.querySelectorAll("[data-ask-coach-match]").forEach(btn => {
     btn.addEventListener("click", () => {
       const match = matchById[btn.dataset.askCoachMatch];

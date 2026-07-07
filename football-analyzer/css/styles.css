@@ -247,10 +247,7 @@ main { max-width: 1080px; margin: 0 auto; padding: 28px 20px 60px; }
 .vt-body .ti-label { font-size: 14px; }
 
 /* Clips */
-.clip-toggle-wrap { margin-top: 8px; }
 .clip-toggle-btn { text-decoration: none; }
-.clip-embed { margin-top: 8px; border-radius: 10px; overflow: hidden; box-shadow: var(--shadow-sm); }
-.clip-embed iframe { display: block; border-radius: 10px; }
 
 /* ---------- Coach AI ---------- */
 .coach-section { background: linear-gradient(160deg, color-mix(in srgb, var(--brand) 8%, var(--surface)), var(--surface)); }
