@@ -69,6 +69,39 @@ function showSetupBanner() {
   document.getElementById("my-communities-list").innerHTML = "";
 }
 
+function showDatabaseMissingBanner() {
+  const el = document.getElementById("community-setup-banner");
+  el.hidden = false;
+  const consoleUrl = `https://console.cloud.google.com/datastore/setup?project=${FIREBASE_CONFIG.projectId}`;
+  el.innerHTML = `
+    <strong>Community Connect can't reach its database.</strong> Firebase Authentication is configured, but no
+    Cloud Firestore database has actually been created for project <code>${FIREBASE_CONFIG.projectId}</code> yet
+    — that's the exact cause of "client is offline" errors here, and no client-side setting can fix it. Open the
+    <a href="${consoleUrl}" target="_blank" rel="noopener">Firestore setup page</a>, click "Create Database"
+    (Native mode, any region), then reload this page.`;
+  document.getElementById("create-community-btn").disabled = true;
+  document.getElementById("join-community-form").querySelector("button").disabled = true;
+}
+
+// Hits Firestore's REST API directly (plain fetch, no SDK, no streaming
+// channel) so a "database not created" 404 can't be masked by the same
+// WebChannel/long-polling churn that produces the generic "client is
+// offline" error. Only returns false on that exact NOT_FOUND response —
+// any other outcome (including the probe itself failing) stays silent so
+// this never fires a false positive over a transient network hiccup.
+async function checkFirestoreDatabaseExists() {
+  try {
+    const resp = await fetch(`https://firestore.googleapis.com/v1/projects/${FIREBASE_CONFIG.projectId}/databases/(default)/documents`);
+    if (resp.status === 404) {
+      const body = await resp.json().catch(() => null);
+      if (body && body.error && body.error.status === "NOT_FOUND") return false;
+    }
+  } catch {
+    return true;
+  }
+  return true;
+}
+
 function showCommunityError(err, context) {
   console.error(context, err);
   const el = document.getElementById("community-error-banner");
@@ -474,6 +507,10 @@ function initCommunityConnect() {
     showSetupBanner();
     return;
   }
+
+  checkFirestoreDatabaseExists().then((exists) => {
+    if (!exists) showDatabaseMissingBanner();
+  });
 
   document.getElementById("create-community-btn").addEventListener("click", () => {
     requireSignIn(() => showCreateCommunityModal());
