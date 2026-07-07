@@ -328,7 +328,7 @@ function computeAndRenderAnalysis() {
   el.querySelectorAll("[data-ask-coach-mistake]").forEach(btn => {
     btn.addEventListener("click", () => {
       const mistake = mistakeById[btn.dataset.askCoachMistake];
-      setCoachContext(mistake.label, `Quick Analyzer matched this description to the mistake "${mistake.label}" (${categoryById[mistake.categoryId].name}). Original description: "${raw}"`);
+      setCoachContext(mistake.label, `Quick Analyzer matched this description to the mistake "${mistake.label}" (${categoryById[mistake.categoryId].name}). Original description: "${raw}"`, { mistakeId: mistake.id });
     });
   });
 }
@@ -379,15 +379,107 @@ function clipSearchUrl(match, km) {
   return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
 }
 
-function renderClip(match, km) {
+/* A handful of key moments describe a short passage of play rather than one
+   instant (a range like "80'-81'", a shared "27' & 45'", or a shootout) — give
+   those a longer embedded window than a single goal/incident. */
+function clipDurationSec(minuteLabel) {
+  const isMultiMoment = /[-&]/.test(minuteLabel) || /pen/i.test(minuteLabel);
+  return isMultiMoment ? 45 : 20;
+}
+
+function renderClip(match, km, uid) {
   if (km.clipVideoId) {
-    const start = km.clipStart ? `&t=${km.clipStart}s` : "";
-    return `<a class="btn btn-ghost btn-small clip-toggle-btn" href="https://www.youtube.com/watch?v=${km.clipVideoId}${start}" target="_blank" rel="noopener">&#9654; Watch clip on YouTube</a>`;
+    const start = km.clipStart || 0;
+    const duration = clipDurationSec(km.minute);
+    const watchUrl = `https://www.youtube.com/watch?v=${km.clipVideoId}${start ? `&t=${start}s` : ""}`;
+    return `
+      <div class="clip-toggle-wrap">
+        <button type="button" class="btn btn-ghost btn-small clip-toggle-btn" data-clip-toggle="${uid}"
+          data-clip-video="${km.clipVideoId}" data-clip-start="${start}" data-clip-duration="${duration}">&#9654; Watch clip</button>
+        <div class="clip-embed" id="clip-${uid}" hidden><div id="clip-player-${uid}"></div></div>
+        <a class="clip-fallback-link" id="clip-fallback-${uid}" href="${watchUrl}" target="_blank" rel="noopener" hidden>
+          &#8599; This clip can't be embedded here — watch it on YouTube</a>
+      </div>`;
   }
   return `<a class="btn btn-ghost btn-small clip-toggle-btn" href="${clipSearchUrl(match, km)}" target="_blank" rel="noopener">&#128269; Find the clip</a>`;
 }
 
+/* ---------- YouTube embed loader (loaded on first clip request only) ---------- */
+function ensureYouTubeApi() {
+  if (window.YT && window.YT.Player) return Promise.resolve();
+  if (!window.__ytApiPromise) {
+    window.__ytApiPromise = new Promise((resolve) => {
+      const prevReady = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        if (typeof prevReady === "function") prevReady();
+        resolve();
+      };
+      const script = document.createElement("script");
+      script.src = "https://www.youtube.com/iframe_api";
+      document.head.appendChild(script);
+    });
+  }
+  return window.__ytApiPromise;
+}
+
+/* Some broadcasters (FIFA World Cup footage in particular) disable
+   third-party embedding entirely for certain regions — the iframe API
+   reports this as a player error rather than silently working, so fall back
+   to the plain YouTube link instead of showing a dead "video unavailable" box. */
+function showClipFallback(uid) {
+  const wrap = document.getElementById(`clip-${uid}`);
+  const fallback = document.getElementById(`clip-fallback-${uid}`);
+  const btn = document.querySelector(`[data-clip-toggle="${uid}"]`);
+  if (wrap) wrap.hidden = true;
+  if (fallback) fallback.hidden = false;
+  if (btn) btn.hidden = true;
+}
+
+async function playClip(btn) {
+  const uid = btn.dataset.clipToggle;
+  const wrap = document.getElementById(`clip-${uid}`);
+  if (!wrap) return;
+
+  if (btn.dataset.loaded === "true") {
+    const opening = wrap.hidden;
+    wrap.hidden = !opening;
+    btn.innerHTML = opening ? "&#9660; Hide clip" : "&#9654; Watch clip";
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Loading…";
+  try {
+    // An ad-blocker or offline connection can silently stop the YouTube API
+    // script from ever loading (onYouTubeIframeAPIReady never fires) — cap
+    // the wait so the button can't get stuck on "Loading…" forever.
+    await Promise.race([
+      ensureYouTubeApi(),
+      new Promise((_, reject) => setTimeout(() => reject(new Error("YouTube API load timed out")), 6000)),
+    ]);
+    const start = Number(btn.dataset.clipStart) || 0;
+    const duration = Number(btn.dataset.clipDuration) || 20;
+    new YT.Player(`clip-player-${uid}`, {
+      videoId: btn.dataset.clipVideo,
+      width: "360",
+      height: "220",
+      playerVars: { autoplay: 1, start, end: start + duration, rel: 0 },
+      events: { onError: () => showClipFallback(uid) },
+    });
+    wrap.hidden = false;
+    btn.dataset.loaded = "true";
+    btn.innerHTML = "&#9660; Hide clip";
+  } catch (err) {
+    console.error("Failed to load YouTube clip:", err);
+    showClipFallback(uid);
+    return;
+  } finally {
+    btn.disabled = false;
+  }
+}
+
 function renderMatchCard(match) {
+  const clipUidBase = `${match.id}-${Math.random().toString(36).slice(2, 7)}`;
   return `
     <div class="match-card">
       <div class="match-score-banner">
@@ -405,6 +497,7 @@ function renderMatchCard(match) {
       <ul class="timeline-list match-timeline vertical-timeline">
         ${match.keyMoments.map((km, i) => {
           const c = categoryById[km.categoryId];
+          const uid = `${clipUidBase}-${i}`;
           return `
             <li class="timeline-item vt-item" style="--c:${categoryColor(km.categoryId)}">
               <div class="vt-dot" style="background:${categoryColor(km.categoryId)}"></div>
@@ -415,7 +508,7 @@ function renderMatchCard(match) {
                 </div>
                 <div class="ti-label">${km.title}</div>
                 <div class="ti-note">${km.note}</div>
-                ${renderClip(match, km)}
+                ${renderClip(match, km, uid)}
               </div>
             </li>`;
         }).join("")}
@@ -437,11 +530,15 @@ function renderMatchCard(match) {
 }
 
 function wireMatchCardInteractions(el) {
+  el.querySelectorAll("[data-clip-toggle]").forEach(btn => {
+    btn.addEventListener("click", () => playClip(btn));
+  });
   el.querySelectorAll("[data-ask-coach-match]").forEach(btn => {
     btn.addEventListener("click", () => {
       const match = matchById[btn.dataset.askCoachMatch];
       setCoachContext(`${match.teams[0]} vs ${match.teams[1]} (${match.year})`,
-        `The user is looking at the famous match "${match.teams[0]} vs ${match.teams[1]}" (${match.competition}, ${match.year}). Summary: ${match.summary}`);
+        `The user is looking at the famous match "${match.teams[0]} vs ${match.teams[1]}" (${match.competition}, ${match.year}). Summary: ${match.summary}`,
+        { matchId: match.id });
     });
   });
 }

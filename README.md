@@ -97,12 +97,12 @@ mistaken for real automated analysis.
 
 PitchIQ also has a **Famous Match Analyzer** (a curated library of key moments from
 World Cup, Champions League and other historic finals, each with coaching talking
-points and a link to watch the actual clip) and a **Coach AI** panel that *is* real,
-Claude-generated advice — the one genuinely AI-backed feature on the whole site, opt-in
-and clearly labeled as such, needing its own small backend (see **"Setting up Coach
-AI"** below). It's linked from Rooted's home page and footer (opens in a new tab) but
-works entirely on its own — just open `football-analyzer/index.html` directly, or serve
-it the same way as the main site.
+points and a short clip playable on the page) and a **Coach AI** panel — a
+conversational front end over the same rule-based mistake knowledge base, no API key
+or backend required, so it works with zero setup like everything else on the site. It's
+linked from Rooted's home page and footer (opens in a new tab) but works entirely on
+its own — just open `football-analyzer/index.html` directly, or serve it the same way
+as the main site.
 
 No build step, no framework in any of the three apps besides Firebase's own SDK (loaded
 via CDN `<script>` tags for Community Connect only) — everything else is plain HTML/CSS/JS.
@@ -184,36 +184,19 @@ Once `js/firebase-config.js` has real values, Community Connect switches on
 automatically — until then, the Community Hub tab shows an on-page notice instead of
 silently failing, and every other tab works normally regardless.
 
-## Setting up Coach AI (PitchIQ)
+## Coach AI (PitchIQ)
 
-Everything in PitchIQ works with **zero setup** except the Coach AI panel, which needs a
-real Claude API key. Unlike Firebase's config (a public web config, safe to expose), an
-Anthropic API key is a genuine secret — it can never be pasted into a static site's
-JavaScript, because anyone could open dev tools and steal it to run up your bill. That's
-why Coach AI needs an actual backend (`football-analyzer/server/`, a small Node/Express
-app) to hold the key server-side and proxy requests to Claude.
+Coach AI works with **zero setup** — no API key, no backend. It answers by matching your
+question's wording against the same published mistake knowledge base as the Quick
+Analyzer (`js/data.js`), the same rule-based approach as the rest of PitchIQ, just
+phrased as a conversation. Tapping "Ask Coach about this" from a tagged mistake, a Quick
+Analyzer result, or a famous match moment carries that context along so Coach answers
+about the specific thing you were looking at, even if your typed question is generic.
 
-1. Get an API key from **[console.anthropic.com](https://console.anthropic.com)** →
-   Settings → API Keys → Create Key.
-2. Deploy `football-analyzer/server/` somewhere that runs a Node process. If you're
-   already using the Render blueprint (`render.yaml`) in this repo, it's already defined
-   as a second web service named `pitchiq-coach-api` — on Render, go to that service →
-   **Environment** and add `ANTHROPIC_API_KEY` with your key (this is exactly what
-   `sync: false` in `render.yaml` is for — Render prompts you for it and never stores it
-   in the repo). Deploying anywhere else (Railway, Fly.io, your own VPS): set the same
-   `ANTHROPIC_API_KEY` environment variable, run `npm install && npm start` from
-   `football-analyzer/server/`, and note the resulting URL.
-3. Copy that service's URL and paste it into `js/coach-config.js`, replacing the
-   placeholder, e.g. `const COACH_API_URL = "https://pitchiq-coach-api.onrender.com/api/coach";`.
-4. Optionally set `ALLOWED_ORIGINS` on the backend service to your deployed PitchIQ URL
-   (comma-separated if there's more than one) so only your site can call it — otherwise
-   it defaults to allowing any origin, which is fine for local testing but means anyone
-   who finds the URL could also send it requests (the backend has a basic per-IP rate
-   limit either way, to bound the worst case).
-
-Until `js/coach-config.js` has a real URL, the Coach AI panel shows an on-page setup
-notice instead of silently failing, and every other part of PitchIQ works normally
-regardless.
+An earlier version of Coach AI proxied real Claude responses through a small Node
+backend that held an Anthropic API key server-side (since a secret like that can never
+be pasted into a static site's JavaScript). That version is still available in this
+repo's history (commit `31107a0`) if you'd rather wire up a real API key later.
 
 ## Sharing it with your group
 
@@ -275,10 +258,8 @@ football-analyzer/index.html     Page shell: video workspace, Quick Analyzer, Fa
 football-analyzer/css/styles.css Design system for PitchIQ
 football-analyzer/js/data.js     Skill categories, mistake/why/fix/drill knowledge base, and the famous-match library
 football-analyzer/js/charts.js   Chart engine (horizontal bar chart for the report)
-football-analyzer/js/coach-config.js  Your Coach AI backend URL (fill in — see setup steps above)
-football-analyzer/js/coach.js    Coach AI panel: talks to server/, on-page setup notice if unconfigured
-football-analyzer/js/app.js      Video tagging, free-text matcher, famous match rendering, sessions, report
-football-analyzer/server/        Coach AI backend (Node/Express) — holds the Anthropic API key server-side
+football-analyzer/js/coach.js    Coach AI panel: rule-based, matches your question against js/data.js, no key/backend
+football-analyzer/js/app.js      Video tagging, free-text matcher, famous match rendering, sessions, report, clip playback
 ```
 
 ## Before you present

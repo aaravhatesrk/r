@@ -20,19 +20,3 @@ services:
       - path: /*
         name: Cache-Control
         value: no-cache
-
-  # Backend for PitchIQ's Coach AI panel (football-analyzer/js/coach.js) — the
-  # only part of this project that needs a real server, because it's the only
-  # part that needs a secret (ANTHROPIC_API_KEY) kept out of client-side code.
-  - type: web
-    name: pitchiq-coach-api
-    runtime: node
-    rootDir: football-analyzer/server
-    buildCommand: npm install
-    startCommand: npm start
-    pullRequestPreviewsEnabled: false
-    envVars:
-      - key: ANTHROPIC_API_KEY
-        sync: false
-      - key: ALLOWED_ORIGINS
-        value: https://rooted-i4d3.onrender.com
