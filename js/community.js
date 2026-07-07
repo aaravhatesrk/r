@@ -31,13 +31,15 @@ function initFirebase() {
     firebase.initializeApp(FIREBASE_CONFIG);
     connectState.auth = firebase.auth();
     connectState.db = firebase.firestore();
-    // Some networks (corporate proxies, antivirus, certain VPNs) block the
-    // WebChannel streaming connection Firestore prefers, which surfaces to
-    // users as "Failed to get document because the client is offline" even
-    // though the network is fine. Auto-detecting long-polling falls back to
-    // plain HTTP requests when the stream doesn't come up — this is
-    // Firestore's own documented fix for that exact error.
-    connectState.db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
+    // Some networks (corporate proxies, antivirus with HTTPS inspection,
+    // certain VPNs) kill Firestore's streaming WebChannel connection after a
+    // few hundred ms, causing it to reconnect in a loop and surface to users
+    // as "Failed to get document because the client is offline" even though
+    // each individual request succeeds. Auto-detecting long-polling still
+    // negotiates a stream first and can get caught in that same churn;
+    // forcing long-polling skips the streaming negotiation entirely, which
+    // is Firestore's documented fix when auto-detect isn't enough.
+    connectState.db.settings({ experimentalForceLongPolling: true, merge: true });
     connectState.firebaseReady = true;
     return true;
   } catch (err) {
