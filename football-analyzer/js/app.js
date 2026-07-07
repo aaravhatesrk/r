@@ -299,6 +299,7 @@ function computeAndRenderAnalysis() {
           <div><span class="ml-lbl">Drill</span>${mistake.drill}</div>
         </div>
         <button class="btn btn-ghost btn-small analyzer-add-btn" data-add-to-session="${mistake.id}">+ Add to current session</button>
+        ${isPrimary ? `<button type="button" class="btn btn-ghost btn-small analyzer-add-btn" data-ask-coach-mistake="${mistake.id}">&#9917; Ask Coach about this</button>` : ""}
       </div>`;
   }
 
@@ -321,6 +322,13 @@ function computeAndRenderAnalysis() {
       renderTimeline();
       btn.textContent = "Added ✓";
       btn.disabled = true;
+    });
+  });
+
+  el.querySelectorAll("[data-ask-coach-mistake]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const mistake = mistakeById[btn.dataset.askCoachMistake];
+      setCoachContext(mistake.label, `Quick Analyzer matched this description to the mistake "${mistake.label}" (${categoryById[mistake.categoryId].name}). Original description: "${raw}"`);
     });
   });
 }
@@ -366,29 +374,59 @@ function populateMatchDatalist() {
   el.innerHTML = FAMOUS_MATCHES.map(m => `<option value="${m.teams[0]} vs ${m.teams[1]} ${m.year}"></option>`).join("");
 }
 
+function clipSearchUrl(match, km) {
+  const query = `${match.teams[0]} ${match.teams[1]} ${match.year} ${km.title}`.replace(/['"]/g, "");
+  return `https://www.youtube.com/results?search_query=${encodeURIComponent(query)}`;
+}
+
+function renderClip(match, km, uid) {
+  if (km.clipVideoId) {
+    const start = km.clipStart ? `&start=${km.clipStart}` : "";
+    return `
+      <div class="clip-toggle-wrap">
+        <button type="button" class="btn btn-ghost btn-small clip-toggle-btn" data-clip-toggle="${uid}">&#9654; Watch clip</button>
+        <div class="clip-embed" id="clip-${uid}" hidden>
+          <iframe width="100%" height="220" loading="lazy" title="${km.title}"
+            src="https://www.youtube.com/embed/${km.clipVideoId}?autoplay=1${start}"
+            frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+        </div>
+      </div>`;
+  }
+  return `<a class="btn btn-ghost btn-small clip-toggle-btn" href="${clipSearchUrl(match, km)}" target="_blank" rel="noopener">&#128269; Find the clip</a>`;
+}
+
 function renderMatchCard(match) {
+  const clipUidBase = `${match.id}-${Math.random().toString(36).slice(2, 7)}`;
   return `
     <div class="match-card">
       <div class="match-score-banner">
-        <span class="match-competition">${match.competition} · ${match.year}</span>
-        <h3>${match.teams[0]} vs ${match.teams[1]}</h3>
+        <div class="match-competition-row">
+          <span class="match-competition">${match.competition} · ${match.year}</span>
+          <button type="button" class="btn btn-ghost btn-small ask-coach-match-btn" data-ask-coach-match="${match.id}">&#9917; Ask Coach about this match</button>
+        </div>
+        <h3>${match.teams[0]} <span class="match-vs">vs</span> ${match.teams[1]}</h3>
         <div class="match-score">${match.score}</div>
         <div class="match-meta">${match.date ? `${match.date} · ` : ""}${match.venue}</div>
       </div>
       <p class="match-summary">${match.summary}</p>
 
       <h4 class="match-subheading">Key moments</h4>
-      <ul class="timeline-list match-timeline">
-        ${match.keyMoments.map(km => {
+      <ul class="timeline-list match-timeline vertical-timeline">
+        ${match.keyMoments.map((km, i) => {
           const c = categoryById[km.categoryId];
+          const uid = `${clipUidBase}-${i}`;
           return `
-            <li class="timeline-item" style="--c:${categoryColor(km.categoryId)}">
-              <div class="ti-head">
-                <span class="ti-time">${km.minute}</span>
-                <span class="chip"><span class="chip-dot" style="background:${categoryColor(km.categoryId)}"></span>${c.icon} ${c.name}</span>
+            <li class="timeline-item vt-item" style="--c:${categoryColor(km.categoryId)}">
+              <div class="vt-dot" style="background:${categoryColor(km.categoryId)}"></div>
+              <div class="vt-body">
+                <div class="ti-head">
+                  <span class="ti-time">${km.minute}</span>
+                  <span class="chip"><span class="chip-dot" style="background:${categoryColor(km.categoryId)}"></span>${c.icon} ${c.name}</span>
+                </div>
+                <div class="ti-label">${km.title}</div>
+                <div class="ti-note">${km.note}</div>
+                ${renderClip(match, km, uid)}
               </div>
-              <div class="ti-label">${km.title}</div>
-              <div class="ti-note">${km.note}</div>
             </li>`;
         }).join("")}
       </ul>
@@ -408,6 +446,25 @@ function renderMatchCard(match) {
     </div>`;
 }
 
+function wireMatchCardInteractions(el) {
+  el.querySelectorAll("[data-clip-toggle]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const uid = btn.dataset.clipToggle;
+      const wrap = document.getElementById(`clip-${uid}`);
+      const opening = wrap.hidden;
+      wrap.hidden = !opening;
+      btn.innerHTML = opening ? "&#9660; Hide clip" : "&#9654; Watch clip";
+    });
+  });
+  el.querySelectorAll("[data-ask-coach-match]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const match = matchById[btn.dataset.askCoachMatch];
+      setCoachContext(`${match.teams[0]} vs ${match.teams[1]} (${match.year})`,
+        `The user is looking at the famous match "${match.teams[0]} vs ${match.teams[1]}" (${match.competition}, ${match.year}). Summary: ${match.summary}`);
+    });
+  });
+}
+
 function renderMatchSuggestions(matches) {
   return `
     <p class="sq-placeholder">No exact match for that yet — did you mean one of these?</p>
@@ -422,6 +479,7 @@ function loadFamousMatch(matchId) {
   document.getElementById("match-analyzer-input").value = `${match.teams[0]} vs ${match.teams[1]} ${match.year}`;
   const el = document.getElementById("match-analyzer-result");
   el.innerHTML = renderMatchCard(match);
+  wireMatchCardInteractions(el);
   el.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
@@ -440,6 +498,7 @@ function computeAndRenderMatchAnalysis() {
   const [top, ...rest] = results;
   const closeAlternatives = rest.filter(m => m.id !== top.id).slice(0, 3);
   el.innerHTML = renderMatchCard(top) + (closeAlternatives.length ? renderMatchSuggestions(closeAlternatives) : "");
+  wireMatchCardInteractions(el);
   el.querySelectorAll("[data-load-match]").forEach(btn => {
     btn.addEventListener("click", () => loadFamousMatch(btn.dataset.loadMatch));
   });
@@ -615,6 +674,7 @@ document.addEventListener("DOMContentLoaded", () => {
   initSessionControls();
   initAnalyzer();
   initMatchAnalyzer();
+  initCoach();
   initClearData();
   renderLibrary();
   renderMatchLibrary();

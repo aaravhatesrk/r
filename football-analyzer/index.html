@@ -154,6 +154,34 @@
     <div class="category-grid" id="match-library-grid"></div>
   </section>
 
+  <!-- COACH AI -->
+  <section class="plan-block coach-section" id="coach-section">
+    <h2>Coach AI</h2>
+    <p class="section-note">Ask a real AI coach anything football — technique, tactics, mentality, how to
+      train something specific. Unlike the rule-based tools above, Coach AI isn't limited to the pre-written
+      Skill Library, so it can answer follow-ups, one-off questions, and anything from a tagged moment,
+      a Quick Analyzer result, or a famous match above.</p>
+
+    <div id="coach-setup-banner" class="disclaimer-banner urgent" hidden></div>
+
+    <div id="coach-context-chip" class="coach-context-chip" hidden>
+      <span>Asking about: <strong id="coach-context-label"></strong></span>
+      <button type="button" id="coach-context-clear" aria-label="Clear context">&times;</button>
+    </div>
+
+    <form id="coach-form" class="analyzer-form">
+      <label>
+        Ask Coach
+        <textarea id="coach-input" rows="3" maxlength="800" placeholder="e.g. How do I stop rushing my shots when I'm through on goal?" required></textarea>
+      </label>
+      <button type="submit" class="btn btn-primary" id="coach-submit-btn">Ask Coach</button>
+    </form>
+
+    <div id="coach-result" class="analyzer-result coach-result" aria-live="polite">
+      <p class="sq-placeholder">Coach's answer will appear here.</p>
+    </div>
+  </section>
+
   <!-- REPORT -->
   <section class="plan-block">
     <h2>Progress report</h2>
@@ -199,6 +227,8 @@
 
 <script src="js/data.js"></script>
 <script src="js/charts.js"></script>
+<script src="js/coach-config.js"></script>
+<script src="js/coach.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

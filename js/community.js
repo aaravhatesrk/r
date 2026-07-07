@@ -39,7 +39,7 @@ function initFirebase() {
     // negotiates a stream first and can get caught in that same churn;
     // forcing long-polling skips the streaming negotiation entirely, which
     // is Firestore's documented fix when auto-detect isn't enough.
-    connectState.db.settings({ experimentalForceLongPolling: true, merge: true });
+    connectState.db.settings({ experimentalForceLongPolling: true });
     connectState.firebaseReady = true;
     return true;
   } catch (err) {

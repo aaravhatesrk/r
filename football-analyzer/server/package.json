@@ -1,0 +1,15 @@
+{
+  "name": "pitchiq-coach-api",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Small proxy that lets PitchIQ's Coach AI panel call Claude without exposing an API key in the static frontend.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.110.0",
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}
