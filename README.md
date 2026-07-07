@@ -27,8 +27,9 @@ A working prototype for a **culturally-adaptive eco-fitness platform** that:
   communities together. Rooted has no partnerships or affiliations with any outside
   organization — nothing on this site claims one.
 
-A separate standalone app, **Athlyze** (`performance-analyzer/`), is linked from the
-home page and footer for sports performance analytics.
+Two separate standalone apps are linked from the home page and footer: **Athlyze**
+(`performance-analyzer/`) for sports performance analytics, and **PitchIQ**
+(`football-analyzer/`) for football skill and match analysis.
 
 ### Community Connect is backed by a real account system
 
@@ -78,8 +79,26 @@ Rooted's home page and footer (opens in a new tab) but works and can be hosted
 entirely on its own — just open `performance-analyzer/index.html` directly, or serve
 it the same way as the main site (see "Running it locally" below).
 
-No build step, no framework in either app besides Firebase's own SDK (loaded via
-CDN `<script>` tags for Community Connect only) — everything else is plain HTML/CSS/JS.
+### PitchIQ — a third, standalone site for football skill & match analysis
+
+`football-analyzer/index.html` is another separate, self-contained app (own HTML/CSS/JS,
+own `localStorage` key, no shared state with Rooted or Athlyze) for reviewing football
+technique and match moments: upload a video clip (it plays back locally in the browser
+tab only — nothing is ever uploaded anywhere) or just describe a passage of play in
+plain text, and PitchIQ matches what you tag or describe against an in-house knowledge
+base of common technical, tactical and decision-making mistakes across 8 skill
+categories (first touch, passing, dribbling, shooting, defending, positioning, decision
+making, goalkeeping). Each match returns *why* the mistake tends to happen, a correction
+cue, and a practice drill — then tracks tagged moments into saved sessions with a
+progress report chart. Like the SQ Prototype and Wellness Advisor, this is deliberately
+**rule-based keyword/dropdown matching, not computer vision or AI** — there is no model
+"watching" the video, which is stated plainly on the page itself so it's never
+mistaken for real automated analysis. It's linked from Rooted's home page and footer
+(opens in a new tab) but works entirely on its own — just open
+`football-analyzer/index.html` directly, or serve it the same way as the main site.
+
+No build step, no framework in any of the three apps besides Firebase's own SDK (loaded
+via CDN `<script>` tags for Community Connect only) — everything else is plain HTML/CSS/JS.
 
 ## Running it locally
 
@@ -212,6 +231,13 @@ performance-analyzer/js/data.js      Sport/metric presets
 performance-analyzer/js/charts.js    Chart engine (adds a line/trend chart)
 performance-analyzer/js/xlsx.js      Dependency-free .xlsx writer used by Athlyze's export button
 performance-analyzer/js/app.js       Entry logging, PR calculation, trend calculation, rendering
+
+football-analyzer/             PitchIQ — standalone football skill & match analyzer (separate site)
+football-analyzer/index.html     Page shell: video workspace, Quick Analyzer, report, library
+football-analyzer/css/styles.css Design system for PitchIQ
+football-analyzer/js/data.js     Skill categories + the mistake/why/fix/drill knowledge base
+football-analyzer/js/charts.js   Chart engine (horizontal bar chart for the report)
+football-analyzer/js/app.js      Video tagging, free-text matcher, sessions, report, rendering
 ```
 
 ## Before you present

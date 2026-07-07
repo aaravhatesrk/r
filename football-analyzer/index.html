@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>PitchIQ — Football Skill &amp; Match Analyzer</title>
+<meta name="description" content="Upload a clip or describe a passage of play, tag mistakes against a coached knowledge base of football fundamentals, and get instant, rule-based critique: why it happened, how to fix it, and a drill to practice." />
+<link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true">P</span>
+    <div class="brand-text">
+      <span class="brand-name">PitchIQ</span>
+      <span class="brand-tag">Football Skill &amp; Match Analyzer</span>
+    </div>
+  </div>
+  <a class="back-link" href="../index.html">&larr; Back to Rooted</a>
+  <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
+    <span class="icon-sun">&#9728;</span><span class="icon-moon">&#9789;</span>
+  </button>
+</header>
+
+<main>
+
+  <div class="hero">
+    <h1>Review the tape. Understand the mistake. Fix it this week.</h1>
+    <p class="lede">
+      PitchIQ is a standalone coaching-critique tool for football (soccer) players and coaches: upload your own
+      match or training clip, or just describe a passage of play in your own words — from your own game, a
+      teammate's, or one you watched at any level up to the professional/international game. PitchIQ matches
+      what you describe against a coached knowledge base of common technical, tactical and decision-making
+      mistakes, and gives you back <strong>why it happens, how to fix it, and a drill to practice.</strong>
+    </p>
+  </div>
+
+  <div class="disclaimer-banner">
+    <strong>Honest about what this is.</strong> PitchIQ does not use computer vision to "watch" your video for
+    you — that needs real video-analysis infrastructure this dependency-free, static tool doesn't have. Instead,
+    it gives you a structured framework: play the clip yourself, tag what you see against a published mistake
+    library, and get instant, rule-based coaching feedback for each tag — same transparent approach as Rooted's
+    Wellness Advisor, not AI or a professional scouting service. Your video file stays entirely on your device;
+    it is never uploaded anywhere, and it isn't saved between visits — only the notes and timestamps you tag are.
+  </div>
+
+  <div class="stat-tiles" id="stat-tiles"></div>
+
+  <!-- VIDEO REVIEW WORKSPACE -->
+  <section class="plan-block">
+    <h2>Video review workspace</h2>
+    <p class="section-note">Upload a clip (stays local to this browser tab), play it, and mark moments as you
+      spot them — each tag asks for a skill category and the specific mistake, then shows you the fix on the
+      spot. No video handy? Skip straight to "Add a general note" or the Quick Analyzer below.</p>
+
+    <div class="video-workspace">
+      <div class="video-pane">
+        <div class="video-drop" id="video-drop">Click to choose a video file from this device<br /><span style="font-size:12px">MP4, WebM, MOV — nothing is uploaded, it plays directly in this tab</span></div>
+        <input type="file" id="video-file-input" accept="video/*" hidden />
+        <video id="review-video" controls hidden></video>
+        <div class="video-controls-row" id="video-controls-row" hidden>
+          <span class="video-time-badge" id="video-time-badge">0:00</span>
+          <button class="btn btn-primary btn-small" id="mark-moment-btn">+ Mark this moment</button>
+          <button class="btn btn-ghost btn-small" id="remove-video-btn">Remove video</button>
+          <span class="sq-placeholder" id="video-name-label" style="margin:0"></span>
+        </div>
+
+        <form id="tag-form" class="tag-form" hidden>
+          <strong id="tag-form-time"></strong>
+          <div class="tag-form-grid">
+            <label>Skill category
+              <select id="tag-category"></select>
+            </label>
+            <label>What happened
+              <select id="tag-mistake"></select>
+            </label>
+          </div>
+          <div class="tag-preview" id="tag-preview"></div>
+          <label>Note (optional)
+            <input id="tag-note" type="text" maxlength="140" placeholder="e.g. 2nd half, under pressure from the left back" />
+          </label>
+          <div class="video-controls-row">
+            <button type="submit" class="btn btn-primary btn-small">Add tag</button>
+            <button type="button" class="btn btn-ghost btn-small" id="tag-cancel-btn">Cancel</button>
+          </div>
+        </form>
+      </div>
+
+      <div class="timeline-pane">
+        <div class="session-meta-row">
+          <label>Session title
+            <input id="session-title" type="text" maxlength="80" placeholder="e.g. Saturday league match vs Riverside" />
+          </label>
+        </div>
+        <div class="session-meta-row">
+          <label>Date
+            <input id="session-date" type="date" />
+          </label>
+          <button class="btn btn-ghost btn-small" id="add-general-note-btn">+ Add a general note</button>
+        </div>
+        <h3 style="font-size:14px;margin-bottom:6px">Tagged moments (this session)</h3>
+        <ul class="timeline-list" id="timeline-list"></ul>
+        <div class="video-controls-row">
+          <button class="btn btn-primary btn-small" id="save-session-btn">Save session</button>
+          <button class="btn btn-ghost btn-small" id="new-session-btn">New session</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUICK ANALYZER -->
+  <section class="plan-block">
+    <h2>Quick Analyzer</h2>
+    <p class="section-note">No video needed — describe a moment from any match (yours, a teammate's, or one you
+      watched at any level) in your own words, and PitchIQ matches it against the same mistake library.</p>
+
+    <form id="analyzer-form" class="analyzer-form">
+      <label>
+        What happened?
+        <textarea id="analyzer-input" rows="4" placeholder="e.g. I received the ball with my back to goal, took a heavy first touch and lost it under pressure before I could turn..." required></textarea>
+      </label>
+      <button type="submit" class="btn btn-primary">Analyze</button>
+    </form>
+
+    <div id="analyzer-result" class="analyzer-result" aria-live="polite">
+      <p class="sq-placeholder">Your analysis will appear here.</p>
+    </div>
+  </section>
+
+  <!-- REPORT -->
+  <section class="plan-block">
+    <h2>Progress report</h2>
+    <p class="section-note">Tagged-mistake counts by skill category across every session you've saved on this
+      device — the tallest bars are the fastest wins to focus on this week.</p>
+    <div class="chart-card">
+      <div class="chart-legend" id="report-legend"></div>
+      <canvas id="report-chart" width="900" height="320" role="img" aria-label="Horizontal bar chart of tagged mistakes per skill category"></canvas>
+      <p class="sq-placeholder" id="report-empty">Save a session with at least one tagged moment to see your report.</p>
+    </div>
+  </section>
+
+  <!-- HISTORY -->
+  <section class="plan-block">
+    <div class="section-head-row">
+      <h2>Session history</h2>
+      <label class="filter-inline">
+        Filter by category
+        <select id="history-filter"></select>
+      </label>
+    </div>
+    <div class="grid" id="history-list"></div>
+    <button id="clear-data-btn" class="btn btn-ghost btn-small clear-btn">Clear all saved sessions</button>
+  </section>
+
+  <!-- LIBRARY -->
+  <section class="plan-block">
+    <h2>Skill Library</h2>
+    <p class="section-note">The full knowledge base behind every tag and every Quick Analyzer match — browsable
+      on its own, no video or account needed. Written in-house for this project; not affiliated with any club,
+      league or federation.</p>
+    <div class="category-grid" id="library-grid"></div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <p>PitchIQ — a standalone football skill &amp; match analyzer built alongside the <a href="../index.html">Rooted</a>
+  business plan prototype. Rule-based knowledge base, not AI or computer vision — see the notice above. Video
+  files are never uploaded or persisted; tagged notes are stored in this browser's <code>localStorage</code>
+  only. Sample session data is pre-loaded on first visit and can be removed from Session History.</p>
+</footer>
+
+<script src="js/data.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
