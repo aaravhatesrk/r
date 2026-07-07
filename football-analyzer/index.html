@@ -128,6 +128,32 @@
     </div>
   </section>
 
+  <!-- FAMOUS MATCH ANALYZER -->
+  <section class="plan-block">
+    <h2>Famous Match Analyzer</h2>
+    <p class="section-note">Type a matchup — a team name and a year works best, e.g. "Argentina vs France 2022" or
+      "Miracle of Istanbul" — and get a breakdown of key moments and coaching talking points from famous matches
+      old and new, across World Cups, continental finals, Champions League finals and famous league games. This is
+      a fixed, hand-curated library (same rule-based approach as the rest of PitchIQ, not a live results feed) —
+      browse the full list below if your match isn't recognized yet.</p>
+
+    <form id="match-analyzer-form" class="analyzer-form">
+      <label>
+        Which game?
+        <input id="match-analyzer-input" type="text" list="match-suggestions" placeholder="e.g. Argentina vs France 2022" required />
+        <datalist id="match-suggestions"></datalist>
+      </label>
+      <button type="submit" class="btn btn-primary">Analyze this match</button>
+    </form>
+
+    <div id="match-analyzer-result" class="analyzer-result" aria-live="polite">
+      <p class="sq-placeholder">Your match breakdown will appear here.</p>
+    </div>
+
+    <h3 class="match-subheading" style="margin-top:22px">Browse the match library</h3>
+    <div class="category-grid" id="match-library-grid"></div>
+  </section>
+
   <!-- REPORT -->
   <section class="plan-block">
     <h2>Progress report</h2>

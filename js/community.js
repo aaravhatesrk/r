@@ -31,6 +31,13 @@ function initFirebase() {
     firebase.initializeApp(FIREBASE_CONFIG);
     connectState.auth = firebase.auth();
     connectState.db = firebase.firestore();
+    // Some networks (corporate proxies, antivirus, certain VPNs) block the
+    // WebChannel streaming connection Firestore prefers, which surfaces to
+    // users as "Failed to get document because the client is offline" even
+    // though the network is fine. Auto-detecting long-polling falls back to
+    // plain HTTP requests when the stream doesn't come up — this is
+    // Firestore's own documented fix for that exact error.
+    connectState.db.settings({ experimentalAutoDetectLongPolling: true, merge: true });
     connectState.firebaseReady = true;
     return true;
   } catch (err) {
@@ -57,9 +64,14 @@ function showCommunityError(err, context) {
   console.error(context, err);
   const el = document.getElementById("community-error-banner");
   el.hidden = false;
-  const message = err && err.code === "permission-denied"
-    ? "Permission denied — check that the Firestore security rules from the README are published on your Firebase project."
-    : (err && err.message) || "Something went wrong talking to the backend. Please try again.";
+  let message;
+  if (err && err.code === "permission-denied") {
+    message = "Permission denied — check that the Firestore security rules from the README are published on your Firebase project.";
+  } else if (err && (err.code === "unavailable" || /client is offline/i.test(err.message || ""))) {
+    message = "Couldn't reach the backend (client is offline). Check your internet connection, and if it's fine, make sure a Cloud Firestore database has actually been created for this project in the Firebase Console (Build → Firestore Database → Create database) — this exact error is what shows up when Authentication is set up but Firestore never was. Ad blockers or restrictive networks can also cause this.";
+  } else {
+    message = (err && err.message) || "Something went wrong talking to the backend. Please try again.";
+  }
   el.innerHTML = `<strong>${context || "Error"}.</strong> ${message}`;
   setTimeout(() => { el.hidden = true; }, 8000);
 }

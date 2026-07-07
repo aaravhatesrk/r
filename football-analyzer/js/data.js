@@ -370,3 +370,261 @@ const mistakeById = Object.fromEntries(ALL_MISTAKES.map(m => [m.id, m]));
 
 const STORAGE_KEY = "pitchiq-sessions";
 const THEME_KEY = "pitchiq-theme";
+
+/* ---------- Famous Match Library ----------
+   A small, hand-curated set of historically notable matches spanning
+   different eras and competitions — World Cup and continental finals,
+   Champions League finals, and famous league/title-race games. This is NOT
+   a live "look up any match" feed (PitchIQ has no game-data API or backend,
+   same static/offline philosophy as everything else here) — it's a fixed,
+   auditable library, same idea as the Skill Library above. Typing something
+   like "Argentina vs France 2022" fuzzy-matches against team names, the
+   year and a few aliases per match; browse the full list below the search
+   box if you'd rather pick one directly. */
+const FAMOUS_MATCHES = [
+  {
+    id: "wc2022-final",
+    competition: "FIFA World Cup Final",
+    year: 2022,
+    date: "18 Dec 2022",
+    venue: "Lusail Stadium, Qatar",
+    teams: ["Argentina", "France"],
+    score: "Argentina 3–3 France (aet) — Argentina won 4–2 on penalties",
+    aliases: ["world cup final", "qatar", "lusail", "messi", "mbappe", "mbappé"],
+    summary: "Argentina raced into a 2-0 lead through the first hour, only for Kylian Mbappé to drag France level with two goals in a two-minute spell late on. Lionel Messi restored the lead in extra time, Mbappé completed a hat-trick from the penalty spot to force a shootout, and Argentina held their nerve from twelve yards to win the trophy.",
+    keyMoments: [
+      { minute: "23'", title: "Messi converts from the spot after Di María is fouled", categoryId: "shooting", note: "A composed, low, side-footed penalty — placement over power, sending the keeper the wrong way." },
+      { minute: "36'", title: "Di María finishes a flowing team move", categoryId: "passing", note: "Built from a patient passing sequence through midfield — the payoff of not forcing the pass early." },
+      { minute: "80'-81'", title: "Mbappé scores twice in under two minutes", categoryId: "shooting", note: "A penalty followed almost immediately by a first-time volley — a reminder that a two-goal lead is never truly safe late on." },
+      { minute: "108'", title: "Messi pounces on a rebound in extra time", categoryId: "positioning", note: "Alert to the loose ball after the initial effort was saved — the goal came from anticipating the second phase, not the first shot." },
+      { minute: "118'", title: "Mbappé completes his hat-trick from the spot", categoryId: "decision-making", note: "Under maximum pressure, in the final minutes of extra time, he stuck to the same routine rather than rushing it." },
+      { minute: "pens", title: "Argentina win the shootout 4–2", categoryId: "goalkeeping", note: "Emiliano Martínez's saves and Gonzalo Montiel's decisive kick settled it — shootouts are often decided by nerve as much as technique." }
+    ],
+    talkingPoints: [
+      { categoryId: "decision-making", title: "Composure doesn't mean rushing", note: "Both Messi's and Mbappé's biggest moments came from sticking to a simple, practiced routine under the highest possible pressure, not trying something new." },
+      { categoryId: "positioning", title: "The game isn't over at 2-0 or even 3-2", note: "Argentina had to defend a two-goal lead twice in the same match — switching off after taking a lead is exactly the kind of static, reactive mentality covered in Positioning above." }
+    ]
+  },
+  {
+    id: "wc2014-final",
+    competition: "FIFA World Cup Final",
+    year: 2014,
+    date: "13 Jul 2014",
+    venue: "Maracanã, Rio de Janeiro",
+    teams: ["Germany", "Argentina"],
+    score: "Germany 1–0 Argentina (aet)",
+    aliases: ["world cup final", "maracana", "gotze", "götze"],
+    summary: "A tight, cagey final decided in extra time. Argentina had the best first-half chance and went close again in normal time, but Germany's bench impact told: substitute Mario Götze controlled a cross on his chest and volleyed home with his first real touch of the half.",
+    keyMoments: [
+      { minute: "47'", title: "Higuaín has a clear sight of goal but shoots wide", categoryId: "shooting", note: "A rushed strike without setting the plant foot properly on the biggest stage — the same mistake covered in the Shooting library, at full intensity." },
+      { minute: "113'", title: "Götze's chest control and first-time volley", categoryId: "first-touch", note: "The touch and the finish were effectively the same motion — an early cushion off the chest set up an instant strike before a defender could close him down." }
+    ],
+    talkingPoints: [
+      { categoryId: "shooting", title: "A half-chance under fatigue is still a chance", note: "Germany's winner came from a substitute converting a single half-chance late in extra time — quality of execution mattered more than the number of chances created." }
+    ]
+  },
+  {
+    id: "wc2014-semifinal",
+    competition: "FIFA World Cup Semi-Final",
+    year: 2014,
+    date: "8 Jul 2014",
+    venue: "Estádio Mineirão, Belo Horizonte",
+    teams: ["Brazil", "Germany"],
+    score: "Germany 7–1 Brazil",
+    aliases: ["mineirazo", "mineirao", "semi final", "semifinal", "7-1", "klose"],
+    summary: "One of the most one-sided results in World Cup history. Playing at home and without the suspended Neymar and injured captain Thiago Silva, Brazil collapsed defensively, conceding five goals in an eighteen-minute spell either side of the half-hour mark. Germany led 5-0 by the 29th minute and cruised to a 7-1 win.",
+    keyMoments: [
+      { minute: "11'", title: "Müller scores unmarked from a corner", categoryId: "defending", note: "Left completely free at the back post from a short corner routine — no defender picked him up." },
+      { minute: "23'-29'", title: "Germany score four more goals in six minutes", categoryId: "positioning", note: "Brazil's defensive shape disintegrated after the first goal — gaps that opened once were exploited again and again rather than being reorganized." },
+      { minute: "90'", title: "Oscar scores a late consolation for Brazil", categoryId: "decision-making", note: "A rare moment of composure late on, after a night where panic had visibly taken over the team's decision-making." }
+    ],
+    talkingPoints: [
+      { categoryId: "defending", title: "One unmarked runner is a warning, not bad luck", note: "Brazil conceded from an almost identical lack of marking multiple times in the same spell — exactly the 'ball-watching, loses track of the runner' pattern covered in Defending, repeated instead of corrected." },
+      { categoryId: "decision-making", title: "Panic compounds mistakes", note: "Once the scoreline got away from Brazil, individual errors multiplied — the clearest large-scale example of why the 'reset routine between plays' habit in Decision Making matters most exactly when a game is going badly." }
+    ]
+  },
+  {
+    id: "wc2010-final",
+    competition: "FIFA World Cup Final",
+    year: 2010,
+    date: "11 Jul 2010",
+    venue: "Soccer City, Johannesburg",
+    teams: ["Spain", "Netherlands"],
+    score: "Spain 1–0 Netherlands (aet)",
+    aliases: ["world cup final", "johannesburg", "iniesta"],
+    summary: "One of the most physical finals in World Cup history — the Netherlands tried to disrupt Spain's passing rhythm with a series of hard, and at times reckless, challenges. Spain absorbed it and won it in the closing minutes of extra time through Andrés Iniesta.",
+    keyMoments: [
+      { minute: "28'", title: "De Jong's chest-high challenge on Alonso goes unpunished", categoryId: "defending", note: "A textbook example of a rash, avoidable challenge — it won nothing back and only invited more pressure on the defense." },
+      { minute: "116'", title: "Iniesta volleys in after a cushioned chest control from Fàbregas' pass", categoryId: "shooting", note: "Composed, low, and side-footed under extreme fatigue — the exact opposite of rushing the shot." }
+    ],
+    talkingPoints: [
+      { categoryId: "defending", title: "Frustration is expensive", note: "The Netherlands picked up nine yellow cards trying to break Spain's rhythm with the body instead of positioning — the kind of emotional, reactive defending covered in the Defending library." }
+    ]
+  },
+  {
+    id: "wc2006-final",
+    competition: "FIFA World Cup Final",
+    year: 2006,
+    date: "9 Jul 2006",
+    venue: "Olympiastadion, Berlin",
+    teams: ["Italy", "France"],
+    score: "Italy 1–1 France (aet) — Italy won 5–3 on penalties",
+    aliases: ["world cup final", "berlin", "zidane", "zinedine zidane", "materazzi"],
+    summary: "Remembered as much for its ending as its football. Zinedine Zidane opened the scoring with an audacious 'Panenka' penalty, Marco Materazzi headed Italy level from a corner, and — in his final professional match — Zidane was sent off in extra time for headbutting Materazzi. Italy won the shootout.",
+    keyMoments: [
+      { minute: "7'", title: "Zidane's chipped 'Panenka' penalty", categoryId: "shooting", note: "A high-risk placement choice under enormous occasion pressure — it worked here, but it's the opposite of the 'read the keeper, don't force it' principle covered in the Shooting library." },
+      { minute: "19'", title: "Materazzi heads Italy level from a corner", categoryId: "positioning", note: "Won on pure movement and timing at the near post from a set piece — a reminder that defending set pieces starts with attacking them well too." },
+      { minute: "110'", title: "Zidane is sent off for headbutting Materazzi", categoryId: "decision-making", note: "One of the most famous examples in the sport of letting frustration override a decision — it removed Zidane, and arguably France's best outlet, from the shootout." }
+    ],
+    talkingPoints: [
+      { categoryId: "decision-making", title: "The reset routine matters most in the biggest moments", note: "Whatever provoked Zidane, the response cost his team a player in extra time of a World Cup final — exactly the scenario the 'reset routine between plays' fix in Decision Making is built for." }
+    ]
+  },
+  {
+    id: "wc1998-final",
+    competition: "FIFA World Cup Final",
+    year: 1998,
+    date: "12 Jul 1998",
+    venue: "Stade de France, Saint-Denis",
+    teams: ["France", "Brazil"],
+    score: "France 3–0 Brazil",
+    aliases: ["world cup final", "stade de france", "zidane"],
+    summary: "The host nation's first World Cup, built on two Zinedine Zidane headers from corners either side of half-time and a late Emmanuel Petit goal on the counter. Brazil, missing their attacking spark on the day, never got a foothold.",
+    keyMoments: [
+      { minute: "27' & 45'", title: "Zidane scores twice with near-identical headers from corners", categoryId: "positioning", note: "Both goals came from the same near-post run, arriving on the ball's flight rather than reacting to it after it arrived — proactive movement, not reactive." },
+      { minute: "90+3'", title: "Petit finishes a counter-attack to make it 3-0", categoryId: "decision-making", note: "A simple, high-percentage finish on the break rather than trying to work a fancier chance with the game already won." }
+    ],
+    talkingPoints: [
+      { categoryId: "positioning", title: "Set pieces are won before the ball arrives", note: "Both of France's opening goals were the same rehearsed near-post run — a reminder that set-piece routines are about winning the space early, not outjumping someone at the last second." }
+    ]
+  },
+  {
+    id: "wc1986-final",
+    competition: "FIFA World Cup Final",
+    year: 1986,
+    date: "29 Jun 1986",
+    venue: "Estadio Azteca, Mexico City",
+    teams: ["Argentina", "West Germany"],
+    score: "Argentina 3–2 West Germany",
+    aliases: ["world cup final", "azteca", "maradona", "burruchaga"],
+    summary: "Argentina led 2-0 and looked comfortable before West Germany fought back to 2-2 with two headed goals from corners in the space of eight minutes. Diego Maradona settled it with a defense-splitting through ball for Jorge Burruchaga to run onto and finish.",
+    keyMoments: [
+      { minute: "74' & 80'", title: "West Germany level it up with two headers from corners", categoryId: "defending", note: "Argentina lost track of unmarked runners at the back post twice in the same spell — the same 'ball-watching' pattern covered in the Defending library." },
+      { minute: "83'", title: "Maradona's pass sets up Burruchaga's winner", categoryId: "passing", note: "A single, perfectly weighted through ball that needed no adjusting touch from the runner — timed to the run, not just struck hard." }
+    ],
+    talkingPoints: [
+      { categoryId: "defending", title: "A two-goal lead can vanish in ten minutes", note: "Two near-identical set-piece goals conceded in quick succession show how one uncorrected marking issue gets exploited again immediately if it isn't fixed after the first goal." }
+    ]
+  },
+  {
+    id: "ucl2005-final",
+    competition: "UEFA Champions League Final",
+    year: 2005,
+    date: "25 May 2005",
+    venue: "Atatürk Olympic Stadium, Istanbul",
+    teams: ["Liverpool", "AC Milan"],
+    score: "Liverpool 3–3 AC Milan (aet) — Liverpool won 3–2 on penalties",
+    aliases: ["champions league final", "istanbul", "miracle of istanbul", "gerrard", "dudek"],
+    summary: "Known as the 'Miracle of Istanbul'. AC Milan led 3-0 at half-time and looked to have the final won. Liverpool scored three times in six second-half minutes to level it, held on through extra time behind a string of Jerzy Dudek saves, and won the shootout.",
+    keyMoments: [
+      { minute: "0'-44'", title: "Milan score three times before half-time", categoryId: "shooting", note: "Clinical, varied finishing (header, two close-range strikes) built from a dominant first-half performance — the kind of ruthless edge the Shooting library is built around." },
+      { minute: "54'-60'", title: "Liverpool score three goals in six minutes to level it", categoryId: "decision-making", note: "Rather than freezing 3-0 down at half-time, Liverpool's response was immediate and direct — a real-world case of the 'reset routine, don't let the last mistake affect the next play' fix." },
+      { minute: "pens", title: "Dudek's saves force and then win the shootout", categoryId: "goalkeeping", note: "A double save in extra time followed by a shootout save — decisive goalkeeping under repeated, sustained pressure." }
+    ],
+    talkingPoints: [
+      { categoryId: "decision-making", title: "3-0 down at half-time is not 3-0 down for the whole match", note: "The most-cited comeback in the competition's history is a direct illustration of resetting after a run of bad play instead of letting it compound." }
+    ]
+  },
+  {
+    id: "ucl1999-final",
+    competition: "UEFA Champions League Final",
+    year: 1999,
+    date: "26 May 1999",
+    venue: "Camp Nou, Barcelona",
+    teams: ["Manchester United", "Bayern Munich"],
+    score: "Manchester United 2–1 Bayern Munich",
+    aliases: ["champions league final", "camp nou", "solskjaer", "sheringham"],
+    summary: "Bayern Munich led from the sixth minute and controlled most of the match, hitting the woodwork twice. Manchester United, chasing a historic treble, scored twice in stoppage time through substitutes Teddy Sheringham and Ole Gunnar Solskjær to complete one of football's most dramatic turnarounds.",
+    keyMoments: [
+      { minute: "6'", title: "Basler's free kick gives Bayern an early lead", categoryId: "shooting", note: "A well-placed, low free kick that the wall and keeper simply couldn't cover in time." },
+      { minute: "91'", title: "Sheringham equalizes from a corner scramble", categoryId: "positioning", note: "A striker introduced as a substitute specifically to be in the right place for exactly this kind of second-ball chance." },
+      { minute: "93'", title: "Solskjær scores the winner with the last kick of the game", categoryId: "positioning", note: "Arriving late into the box from a deeper starting position — the run itself is what created the chance, not a moment of individual skill." }
+    ],
+    talkingPoints: [
+      { categoryId: "positioning", title: "Late runners change games", note: "Both United goals came from substitutes making runs into the box that Bayern's defense hadn't accounted for — proactive movement beating a settled, tired back line." }
+    ]
+  },
+  {
+    id: "ucl2012-final",
+    competition: "UEFA Champions League Final",
+    year: 2012,
+    date: "19 May 2012",
+    venue: "Allianz Arena, Munich",
+    teams: ["Chelsea", "Bayern Munich"],
+    score: "Chelsea 1–1 Bayern Munich (aet) — Chelsea won 4–3 on penalties",
+    aliases: ["champions league final", "munich", "drogba"],
+    summary: "Bayern Munich, playing the final in their own stadium, took a late lead through Thomas Müller, but Didier Drogba headed Chelsea level almost immediately. Arjen Robben had a penalty saved in extra time, and Chelsea held on to win the shootout — with Drogba scoring the decisive kick.",
+    keyMoments: [
+      { minute: "83'", title: "Müller heads Bayern in front", categoryId: "positioning", note: "Ghosted into space between Chelsea's centre-backs at the back post — a gap that had been showing for several minutes before it was punished." },
+      { minute: "88'", title: "Drogba equalizes with a header from a corner", categoryId: "positioning", note: "An immediate response rather than a team that let the setback affect the next few minutes of play." },
+      { minute: "penalties", title: "Robben's extra-time penalty is saved", categoryId: "shooting", note: "A well-placed save by Petr Čech rewarded, but also a reminder that even elite penalty-takers can be read under pressure." }
+    ],
+    talkingPoints: [
+      { categoryId: "decision-making", title: "Respond immediately, don't dwell", note: "Chelsea conceded with five minutes left and were level within ninety seconds — the value of an immediate, composed response over one that lets panic set in." }
+    ]
+  },
+  {
+    id: "euro2020-final",
+    competition: "UEFA European Championship Final",
+    year: 2021,
+    date: "11 Jul 2021",
+    venue: "Wembley Stadium, London",
+    teams: ["Italy", "England"],
+    score: "Italy 1–1 England (aet) — Italy won 3–2 on penalties",
+    aliases: ["euro 2020", "euro final", "euros final", "wembley"],
+    summary: "England took an early lead — the fastest goal in a European Championship final — but Italy gradually took control of possession, equalized in the second half, and went on to win the shootout.",
+    keyMoments: [
+      { minute: "2'", title: "Shaw scores from a flowing early move", categoryId: "shooting", note: "A first-time, first-half finish taken instinctively — no time to overthink the placement, and it paid off." },
+      { minute: "67'", title: "Bonucci scrambles in an equalizer from a corner", categoryId: "positioning", note: "Alert to a loose ball in a crowded box after the initial header wasn't cleared — reading the second phase of a set piece, not just the first contact." }
+    ],
+    talkingPoints: [
+      { categoryId: "decision-making", title: "An early lead changes nothing about the shape of a 90-minute game", note: "England led for over an hour, but Italy's patient, sustained pressure eventually told — a reminder not to sit back and defend a lead too early or too passively." }
+    ]
+  },
+  {
+    id: "pl2012-city-qpr",
+    competition: "Premier League",
+    year: 2012,
+    date: "13 May 2012",
+    venue: "Etihad Stadium, Manchester",
+    teams: ["Manchester City", "Queens Park Rangers"],
+    score: "Manchester City 3–2 QPR",
+    aliases: ["man city", "manchester city", "qpr", "aguero", "agüero", "premier league title", "aguerooo"],
+    summary: "The final day of the 2011–12 Premier League season. Manchester City needed a win to clinch their first English top-flight title in 44 years, level on points with Manchester United. City fell behind twice to ten-man QPR and were still drawing 2-2 deep into stoppage time before scoring twice in the space of two minutes.",
+    keyMoments: [
+      { minute: "90+2'", title: "Džeko heads in an equalizer from a corner", categoryId: "positioning", note: "A team refusing to accept the game — and the title — was slipping away, still committing bodies forward in the final minute." },
+      { minute: "90+4'", title: "Agüero receives, turns and finishes for the winner", categoryId: "first-touch", note: "A composed touch to set himself up for the shot in a congested box, under about as much pressure and stakes as exists in the sport." }
+    ],
+    talkingPoints: [
+      { categoryId: "decision-making", title: "Keep playing until the whistle actually goes", note: "City were a goal down with three minutes of normal time left and still won the match and the title — the value of not letting the situation dictate a passive mentality before it's actually over." }
+    ]
+  },
+  {
+    id: "laliga2017-clasico",
+    competition: "La Liga (El Clásico)",
+    year: 2017,
+    date: "23 Apr 2017",
+    venue: "Camp Nou, Barcelona",
+    teams: ["Barcelona", "Real Madrid"],
+    score: "Barcelona 3–2 Real Madrid",
+    aliases: ["el clasico", "el clásico", "clasico", "barcelona vs real madrid", "messi"],
+    summary: "A back-and-forth Clásico with five different goalscorers, decided in stoppage time when Lionel Messi collected the ball, drove at the Madrid defense and finished for a 3-2 winner — then held up his shirt to a crowd that had whistled him earlier in the game.",
+    keyMoments: [
+      { minute: "90+2'", title: "Messi's driving run and finish wins it", categoryId: "dribbling", note: "A sharp change of pace to get half a yard on the defender rather than trying to dribble past multiple players at a constant speed." }
+    ],
+    talkingPoints: [
+      { categoryId: "dribbling", title: "One decisive burst beats a string of touches", note: "The winning move was one acceleration into space, not a series of tricks — matching the 'change of pace beats constant speed' fix in the Dribbling library." }
+    ]
+  }
+];
+const matchById = Object.fromEntries(FAMOUS_MATCHES.map(m => [m.id, m]));

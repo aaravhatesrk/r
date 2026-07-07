@@ -325,6 +325,147 @@ function computeAndRenderAnalysis() {
   });
 }
 
+/* ---------- Famous Match Analyzer (searches the fixed FAMOUS_MATCHES
+   library in data.js — see the comment there on why this is a curated list
+   rather than a live lookup) ---------- */
+function normalizeMatchQuery(raw) {
+  return raw
+    .toLowerCase()
+    .replace(/\bversus\b|\bvs\.?\b/g, " ")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function scoreMatch(query, match) {
+  let score = 0;
+  match.teams.forEach(team => {
+    if (query.includes(team.toLowerCase())) score += 3;
+  });
+  const yearHit = query.match(/\b(19|20)\d{2}\b/);
+  if (yearHit && Number(yearHit[0]) === match.year) score += 3;
+  match.aliases.forEach(alias => {
+    if (query.includes(alias)) score += 2;
+  });
+  if (query.includes(match.competition.toLowerCase())) score += 1;
+  return score;
+}
+
+function findFamousMatches(rawQuery) {
+  const query = normalizeMatchQuery(rawQuery);
+  if (!query) return [];
+  return FAMOUS_MATCHES
+    .map(match => ({ match, score: scoreMatch(query, match) }))
+    .filter(r => r.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .map(r => r.match);
+}
+
+function populateMatchDatalist() {
+  const el = document.getElementById("match-suggestions");
+  el.innerHTML = FAMOUS_MATCHES.map(m => `<option value="${m.teams[0]} vs ${m.teams[1]} ${m.year}"></option>`).join("");
+}
+
+function renderMatchCard(match) {
+  return `
+    <div class="match-card">
+      <div class="match-score-banner">
+        <span class="match-competition">${match.competition} · ${match.year}</span>
+        <h3>${match.teams[0]} vs ${match.teams[1]}</h3>
+        <div class="match-score">${match.score}</div>
+        <div class="match-meta">${match.date ? `${match.date} · ` : ""}${match.venue}</div>
+      </div>
+      <p class="match-summary">${match.summary}</p>
+
+      <h4 class="match-subheading">Key moments</h4>
+      <ul class="timeline-list match-timeline">
+        ${match.keyMoments.map(km => {
+          const c = categoryById[km.categoryId];
+          return `
+            <li class="timeline-item" style="--c:${categoryColor(km.categoryId)}">
+              <div class="ti-head">
+                <span class="ti-time">${km.minute}</span>
+                <span class="chip"><span class="chip-dot" style="background:${categoryColor(km.categoryId)}"></span>${c.icon} ${c.name}</span>
+              </div>
+              <div class="ti-label">${km.title}</div>
+              <div class="ti-note">${km.note}</div>
+            </li>`;
+        }).join("")}
+      </ul>
+
+      <h4 class="match-subheading">Talking points for your own game</h4>
+      <div class="match-talking-points">
+        ${match.talkingPoints.map(tp => {
+          const c = categoryById[tp.categoryId];
+          return `
+            <div class="analyzer-match">
+              <h3><span class="chip"><span class="chip-dot" style="background:${categoryColor(tp.categoryId)}"></span>${c.icon} ${c.name}</span></h3>
+              <p style="font-weight:600">${tp.title}</p>
+              <div class="analyzer-body"><div>${tp.note}</div></div>
+            </div>`;
+        }).join("")}
+      </div>
+    </div>`;
+}
+
+function renderMatchSuggestions(matches) {
+  return `
+    <p class="sq-placeholder">No exact match for that yet — did you mean one of these?</p>
+    <div class="match-suggestion-list">
+      ${matches.map(m => `<button type="button" class="btn btn-ghost btn-small" data-load-match="${m.id}">${m.teams[0]} vs ${m.teams[1]} (${m.year})</button>`).join("")}
+    </div>`;
+}
+
+function loadFamousMatch(matchId) {
+  const match = matchById[matchId];
+  if (!match) return;
+  document.getElementById("match-analyzer-input").value = `${match.teams[0]} vs ${match.teams[1]} ${match.year}`;
+  const el = document.getElementById("match-analyzer-result");
+  el.innerHTML = renderMatchCard(match);
+  el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+}
+
+function computeAndRenderMatchAnalysis() {
+  const raw = document.getElementById("match-analyzer-input").value;
+  const el = document.getElementById("match-analyzer-result");
+  const results = findFamousMatches(raw);
+
+  if (results.length === 0) {
+    el.innerHTML = `
+      <p class="sq-placeholder">Couldn't find that in the match library yet. Try a team name and a year (e.g. "Argentina vs France 2022"),
+      or browse the full library below.</p>`;
+    return;
+  }
+
+  const [top, ...rest] = results;
+  const closeAlternatives = rest.filter(m => m.id !== top.id).slice(0, 3);
+  el.innerHTML = renderMatchCard(top) + (closeAlternatives.length ? renderMatchSuggestions(closeAlternatives) : "");
+  el.querySelectorAll("[data-load-match]").forEach(btn => {
+    btn.addEventListener("click", () => loadFamousMatch(btn.dataset.loadMatch));
+  });
+}
+
+function initMatchAnalyzer() {
+  populateMatchDatalist();
+  document.getElementById("match-analyzer-form").addEventListener("submit", (e) => {
+    e.preventDefault();
+    computeAndRenderMatchAnalysis();
+  });
+}
+
+function renderMatchLibrary() {
+  const el = document.getElementById("match-library-grid");
+  el.innerHTML = FAMOUS_MATCHES.map(m => `
+    <div class="category-card match-library-card" style="--c:var(--brand)">
+      <h3>${m.teams[0]} vs ${m.teams[1]}</h3>
+      <div class="count">${m.competition} · ${m.year}</div>
+      <button type="button" class="btn btn-ghost btn-small" data-load-match="${m.id}">View analysis</button>
+    </div>`).join("");
+  el.querySelectorAll("[data-load-match]").forEach(btn => {
+    btn.addEventListener("click", () => loadFamousMatch(btn.dataset.loadMatch));
+  });
+}
+
 /* ---------- Skill Library ---------- */
 function renderLibrary() {
   const el = document.getElementById("library-grid");
@@ -473,7 +614,9 @@ document.addEventListener("DOMContentLoaded", () => {
   initTagForm();
   initSessionControls();
   initAnalyzer();
+  initMatchAnalyzer();
   initClearData();
   renderLibrary();
+  renderMatchLibrary();
   renderAll();
 });
