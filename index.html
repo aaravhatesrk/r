@@ -284,9 +284,33 @@
   <div class="modal-box" role="dialog" aria-modal="true" id="modal-box"></div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script type="module">
+  // Everything Firebase-related here uses the modular SDK, not the compat/namespaced one
+  // (firebase-*-compat.js). Two reasons: (1) the compat Firestore SDK can only ever connect
+  // to the database literally named "(default)" — its multi-database support is silently a
+  // no-op, so firebase.app().firestore(someOtherId) still connects to "(default)" regardless.
+  // Some Firebase projects' actual default database is provisioned under the plain name
+  // "default" instead, invisible to the compat SDK; only the modular SDK's
+  // getFirestore(app, databaseId) / initializeFirestore(app, settings, databaseId) can target
+  // a non-"(default)" database. (2) The compat bundles and the modular bundles are separate,
+  // unlinked builds with independent app registries — compat's firebase.initializeApp() and
+  // modular's getApp() do not see the same app, so mixing compat Auth with modular Firestore
+  // means Firestore never sees the signed-in user's ID token. Auth has to be modular too so
+  // it shares one real app instance with Firestore. See js/community.js.
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
+  import {
+    getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+  import {
+    initializeFirestore, doc, getDoc, setDoc, collection, query, where,
+    onSnapshot, runTransaction, serverTimestamp, arrayUnion, arrayRemove
+  } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+  window.__firebaseModular = {
+    initializeApp, getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged,
+    initializeFirestore, doc, getDoc, setDoc, collection, query, where,
+    onSnapshot, runTransaction, serverTimestamp, arrayUnion, arrayRemove
+  };
+</script>
 <script src="js/firebase-config.js"></script>
 <script src="js/data.js"></script>
 <script src="js/charts.js"></script>

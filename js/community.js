@@ -23,14 +23,14 @@ const connectState = {
 };
 
 /* ---------- Firebase bootstrap ---------- */
-function initFirebase() {
+function initFirebase(databaseId) {
   if (typeof FIREBASE_CONFIG === "undefined") return false;
-  if (typeof firebase === "undefined") return false;
+  if (typeof window.__firebaseModular === "undefined") return false;
   if (FIREBASE_CONFIG_IS_PLACEHOLDER) return false;
   try {
-    firebase.initializeApp(FIREBASE_CONFIG);
-    connectState.auth = firebase.auth();
-    connectState.db = firebase.firestore();
+    const fx = window.__firebaseModular;
+    const app = fx.initializeApp(FIREBASE_CONFIG);
+    connectState.auth = fx.getAuth(app);
     // Some networks (corporate proxies, antivirus with HTTPS inspection,
     // certain VPNs) kill Firestore's streaming WebChannel connection after a
     // few hundred ms, causing it to reconnect in a loop and surface to users
@@ -45,8 +45,14 @@ function initFirebase() {
     // native streaming also break that fetch stream, reproducing the exact
     // same "client is offline" error. useFetchStreams: false drops back to
     // plain XHR for long-polling, which those middleboxes don't interfere
-    // with.
-    connectState.db.settings({ experimentalForceLongPolling: true, useFetchStreams: false });
+    // with. Settings must be passed at creation time in the modular API (no
+    // separate .settings() call afterward), and databaseId is the value
+    // resolveFirestoreDatabaseId() found this project's real database under —
+    // omit it for the classic reserved "(default)" case.
+    const settings = { experimentalForceLongPolling: true, useFetchStreams: false };
+    connectState.db = databaseId === "(default)"
+      ? fx.initializeFirestore(app, settings)
+      : fx.initializeFirestore(app, settings, databaseId);
     connectState.firebaseReady = true;
     return true;
   } catch (err) {
@@ -97,17 +103,30 @@ function showDatabaseMissingBanner() {
 // error.status), and an empty/missing collection in an existing database
 // just returns 200 with no documents, so this still only fires on a truly
 // missing database.
-async function checkFirestoreDatabaseExists() {
-  try {
-    const resp = await fetch(`https://firestore.googleapis.com/v1/projects/${FIREBASE_CONFIG.projectId}/databases/(default)/documents/communities`);
-    if (resp.status === 404) {
-      const body = await resp.json().catch(() => null);
-      if (body && body.error && body.error.status === "NOT_FOUND") return false;
+//
+// Tries both possible IDs for a project's default database: the classic
+// reserved "(default)" (what firebase.firestore() targets with no argument),
+// and the literal "default" — some projects' default database is provisioned
+// under that plain name instead, which "(default)" 404s against even though
+// the database is real. A 403 PERMISSION_DENIED (this app's rules require
+// request.auth != null) only happens for an ID Firestore actually resolved to
+// a real database, so it counts as "exists" same as a 200; a 404 NOT_FOUND
+// with that exact database name in the body means that ID has no database.
+// Returns the working database ID, or null if neither exists.
+async function resolveFirestoreDatabaseId() {
+  for (const candidate of ["(default)", "default"]) {
+    try {
+      const resp = await fetch(`https://firestore.googleapis.com/v1/projects/${FIREBASE_CONFIG.projectId}/databases/${candidate}/documents/communities`);
+      if (resp.status === 404) {
+        const body = await resp.json().catch(() => null);
+        if (body && body.error && body.error.status === "NOT_FOUND") continue;
+      }
+      return candidate;
+    } catch {
+      return "(default)";
     }
-  } catch {
-    return true;
   }
-  return true;
+  return null;
 }
 
 function showCommunityError(err, context) {
@@ -134,10 +153,11 @@ function generateCommunityCode() {
 }
 
 async function generateUniqueCommunityCode() {
+  const fx = window.__firebaseModular;
   for (let attempt = 0; attempt < 10; attempt++) {
     const code = generateCommunityCode();
-    const snap = await connectState.db.collection("communities").doc(code).get();
-    if (!snap.exists) return code;
+    const snap = await fx.getDoc(fx.doc(connectState.db, "communities", code));
+    if (!snap.exists()) return code;
   }
   throw new Error("Could not generate a unique invite code — please try again.");
 }
@@ -183,8 +203,9 @@ function initModal() {
 
 /* ---------- Sign-in (real Google account via Firebase Auth) ---------- */
 async function signInWithGoogle() {
-  const provider = new firebase.auth.GoogleAuthProvider();
-  return connectState.auth.signInWithPopup(provider);
+  const fx = window.__firebaseModular;
+  const provider = new fx.GoogleAuthProvider();
+  return fx.signInWithPopup(connectState.auth, provider);
 }
 
 function requireSignIn(then) {
@@ -220,15 +241,16 @@ function showCreateCommunityModal() {
       submitBtn.disabled = true;
       submitBtn.textContent = "Creating…";
       try {
+        const fx = window.__firebaseModular;
         const code = await generateUniqueCommunityCode();
         const member = { name: user.displayName || user.email, email: user.email, joinedAt: Date.now() };
-        await connectState.db.collection("communities").doc(code).set({
+        await fx.setDoc(fx.doc(connectState.db, "communities", code), {
           code,
           name,
           description,
           ownerEmail: user.email,
           ownerName: member.name,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+          createdAt: fx.serverTimestamp(),
           memberEmails: [user.email],
           members: [member]
         });
@@ -276,35 +298,37 @@ function showShareModal(code, name) {
 /* ---------- Join / leave (Firestore transactions so concurrent joins from
    different accounts on different devices never clobber each other) ---------- */
 async function joinCommunityByCode(rawCode) {
+  const fx = window.__firebaseModular;
   const code = rawCode.toUpperCase().trim();
   const user = connectState.currentUser;
-  const ref = connectState.db.collection("communities").doc(code);
+  const ref = fx.doc(connectState.db, "communities", code);
 
-  return connectState.db.runTransaction(async (tx) => {
+  return fx.runTransaction(connectState.db, async (tx) => {
     const snap = await tx.get(ref);
-    if (!snap.exists) throw Object.assign(new Error("No community found for that code."), { code: "not-found" });
+    if (!snap.exists()) throw Object.assign(new Error("No community found for that code."), { code: "not-found" });
     const data = snap.data();
     if (data.memberEmails.includes(user.email)) return data;
     const member = { name: user.displayName || user.email, email: user.email, joinedAt: Date.now() };
     tx.update(ref, {
-      memberEmails: firebase.firestore.FieldValue.arrayUnion(user.email),
-      members: firebase.firestore.FieldValue.arrayUnion(member)
+      memberEmails: fx.arrayUnion(user.email),
+      members: fx.arrayUnion(member)
     });
     return { ...data, memberEmails: [...data.memberEmails, user.email], members: [...data.members, member] };
   });
 }
 
 async function leaveCommunity(code) {
+  const fx = window.__firebaseModular;
   const user = connectState.currentUser;
-  const ref = connectState.db.collection("communities").doc(code);
-  return connectState.db.runTransaction(async (tx) => {
+  const ref = fx.doc(connectState.db, "communities", code);
+  return fx.runTransaction(connectState.db, async (tx) => {
     const snap = await tx.get(ref);
-    if (!snap.exists) return;
+    if (!snap.exists()) return;
     const data = snap.data();
     const memberObj = data.members.find(m => m.email === user.email);
     tx.update(ref, {
-      memberEmails: firebase.firestore.FieldValue.arrayRemove(user.email),
-      members: memberObj ? firebase.firestore.FieldValue.arrayRemove(memberObj) : data.members
+      memberEmails: fx.arrayRemove(user.email),
+      members: memberObj ? fx.arrayRemove(memberObj) : data.members
     });
   });
 }
@@ -342,8 +366,9 @@ async function resolvePendingInvite() {
   if (!connectState.pendingInviteCode || !connectState.currentUser) return;
   if (connectState.pendingInviteCommunity) return;
   try {
-    const snap = await connectState.db.collection("communities").doc(connectState.pendingInviteCode).get();
-    connectState.pendingInviteCommunity = snap.exists ? snap.data() : "not-found";
+    const fx = window.__firebaseModular;
+    const snap = await fx.getDoc(fx.doc(connectState.db, "communities", connectState.pendingInviteCode));
+    connectState.pendingInviteCommunity = snap.exists() ? snap.data() : "not-found";
   } catch (err) {
     connectState.pendingInviteCommunity = "not-found";
     showCommunityError(err, "Couldn't load that invite");
@@ -428,12 +453,12 @@ function subscribeMyCommunities() {
   const user = connectState.currentUser;
   if (!user) { connectState.myCommunities = []; renderMyCommunities(); return; }
 
-  connectState.unsubscribeMyCommunities = connectState.db.collection("communities")
-    .where("memberEmails", "array-contains", user.email)
-    .onSnapshot((snap) => {
-      connectState.myCommunities = snap.docs.map(d => d.data());
-      renderMyCommunities();
-    }, (err) => showCommunityError(err, "Couldn't load your communities"));
+  const fx = window.__firebaseModular;
+  const q = fx.query(fx.collection(connectState.db, "communities"), fx.where("memberEmails", "array-contains", user.email));
+  connectState.unsubscribeMyCommunities = fx.onSnapshot(q, (snap) => {
+    connectState.myCommunities = snap.docs.map(d => d.data());
+    renderMyCommunities();
+  }, (err) => showCommunityError(err, "Couldn't load your communities"));
 }
 
 /* ---------- Rendering ---------- */
@@ -507,25 +532,34 @@ function renderMyCommunities() {
 }
 
 /* ---------- Init ---------- */
-function initCommunityConnect() {
+async function initCommunityConnect() {
   initModal();
   handleInviteFromUrl();
 
-  if (!initFirebase()) {
+  if (typeof FIREBASE_CONFIG === "undefined" || typeof window.__firebaseModular === "undefined" || FIREBASE_CONFIG_IS_PLACEHOLDER) {
     showSetupBanner();
     return;
   }
 
-  checkFirestoreDatabaseExists().then((exists) => {
-    if (!exists) showDatabaseMissingBanner();
-  });
+  const databaseId = await resolveFirestoreDatabaseId();
+  if (!databaseId) {
+    // Still init auth so sign-in isn't dead, but the DB-backed features stay disabled.
+    initFirebase("(default)");
+    showDatabaseMissingBanner();
+    return;
+  }
+
+  if (!initFirebase(databaseId)) {
+    showSetupBanner();
+    return;
+  }
 
   document.getElementById("create-community-btn").addEventListener("click", () => {
     requireSignIn(() => showCreateCommunityModal());
   });
   initJoinForm();
 
-  connectState.auth.onAuthStateChanged((user) => {
+  window.__firebaseModular.onAuthStateChanged(connectState.auth, (user) => {
     connectState.currentUser = user;
     renderAuthArea();
     subscribeMyCommunities();
