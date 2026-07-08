@@ -604,15 +604,15 @@ function buildRoomHtml(community) {
       </div>
     </div>
     <div class="room-tabs" role="tablist">
-      <button class="room-tab-btn active" data-room-tab="feed" type="button">Feed</button>
+      <button class="room-tab-btn active" data-room-tab="feed" type="button">Chat</button>
       <button class="room-tab-btn" data-room-tab="events" type="button">Events</button>
       <button class="room-tab-btn" data-room-tab="tips" type="button">Fitness Tips</button>
     </div>
     <div class="room-panel" id="room-panel-feed">
       <div class="room-feed-list" id="room-feed-list"><p class="sq-placeholder">Loading…</p></div>
       <form class="room-post-form" id="room-post-form">
-        <input type="text" id="room-post-input" maxlength="500" placeholder="Share something with the community…" autocomplete="off" required />
-        <button type="submit" class="btn btn-primary btn-small">Post</button>
+        <input type="text" id="room-post-input" maxlength="500" placeholder="Message the group…" autocomplete="off" required />
+        <button type="submit" class="btn btn-primary btn-small">Send</button>
       </form>
     </div>
     <div class="room-panel" id="room-panel-events" hidden>
