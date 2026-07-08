@@ -19,8 +19,23 @@ const connectState = {
   unsubscribeMyCommunities: null,
   pendingInviteCode: null,
   pendingInviteCommunity: null, // "not-found" | community data object | null (not yet resolved)
-  myCommunities: []
+  myCommunities: [],
+  room: null // { code, unsubPosts, unsubEvents } while the community room modal is open
 };
+
+// Rooted's own physical-fitness tips & advancements — static, in-house content
+// (matches the rest of the site's "transparent, rule-based, no outside API" approach),
+// shown in every community room's "Fitness Tips" tab.
+const FITNESS_TIPS = [
+  { tag: "Training", title: "Progressive overload beats motivation", body: "Small, consistent increases in reps, weight or distance each week outperform sporadic all-out sessions — and are far easier to sustain as a group challenge." },
+  { tag: "Recovery", title: "Sleep is a performance metric", body: "7–9 hours of sleep measurably improves reaction time, endurance and injury resilience — recent sports-science reviews rank it alongside training load as a top predictor of performance." },
+  { tag: "Nutrition", title: "Protein timing matters less than total intake", body: "Hitting your daily protein target consistently matters far more than eating it in a narrow post-workout window — a myth that's been walked back by more recent research." },
+  { tag: "Mobility", title: "Dynamic warm-ups outperform static stretching pre-workout", body: "Movement-based warm-ups (leg swings, walking lunges) prep muscles for output better than holding static stretches, which can temporarily reduce power output if done right before intense effort." },
+  { tag: "Advancement", title: "Wearable HRV tracking is going mainstream", body: "Heart-rate-variability tracking, once niche, is now used by casual athletes to gauge daily recovery and decide whether to push hard or take an active-rest day." },
+  { tag: "Group fitness", title: "Group accountability raises adherence", body: "Studies on group exercise consistently show higher long-term adherence than solo training — a big part of why community-organized events work better than individual goals alone." },
+  { tag: "Cardio", title: "Zone 2 training is having a moment", body: "Long, easy conversational-pace cardio builds aerobic base and fat-burning efficiency, and is now a staple of endurance-coaching programs once reserved for elite athletes." },
+  { tag: "Injury prevention", title: "Eccentric strength work cuts injury risk", body: "Controlled lowering phases of a lift (e.g. slow squat descents) build tendon resilience and are widely recommended as a low-cost way to reduce common running and jumping injuries." }
+];
 
 /* ---------- Firebase bootstrap ---------- */
 function initFirebase(databaseId) {
@@ -166,6 +181,14 @@ function initials(name) {
   return (name || "?").trim().split(/\s+/).slice(0, 2).map(w => w[0].toUpperCase()).join("");
 }
 
+const ESCAPE_MAP = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" };
+// All community content (names, descriptions, chat messages, event details) is
+// user-submitted and rendered via innerHTML for formatting — escape it so one member
+// can't inject markup/scripts into a room every other member's browser renders.
+function escapeHtml(str) {
+  return String(str == null ? "" : str).replace(/[&<>"']/g, (c) => ESCAPE_MAP[c]);
+}
+
 function buildInviteLink(code) {
   return `${location.origin}${location.pathname}?join=${code}`;
 }
@@ -180,16 +203,25 @@ async function copyToClipboard(text) {
 }
 
 /* ---------- Modal ---------- */
-function openModal(html, onMount) {
+let modalCloseHandler = null;
+function openModal(html, onMount, onClose) {
   const overlay = document.getElementById("modal-overlay");
   const box = document.getElementById("modal-box");
   box.innerHTML = html;
+  box.classList.remove("modal-box-room");
   overlay.hidden = false;
+  modalCloseHandler = onClose || null;
   if (onMount) onMount(box);
 }
 function closeModal() {
   document.getElementById("modal-overlay").hidden = true;
   document.getElementById("modal-box").innerHTML = "";
+  document.getElementById("modal-box").classList.remove("modal-box-room");
+  if (modalCloseHandler) {
+    const handler = modalCloseHandler;
+    modalCloseHandler = null;
+    handler();
+  }
 }
 function initModal() {
   const overlay = document.getElementById("modal-overlay");
@@ -270,7 +302,7 @@ function showShareModal(code, name) {
   const link = buildInviteLink(code);
   openModal(`
     <button class="modal-close" aria-label="Close">&times;</button>
-    <h3>"${name}" is live</h3>
+    <h3>"${escapeHtml(name)}" is live</h3>
     <p class="modal-note">Share the link (recommended) or the code — either lets anyone with their own Google account join.</p>
     <label class="modal-share-label">Invite link
       <div class="copy-row"><input type="text" readonly value="${link}" id="share-link-input" /><button class="btn btn-ghost btn-small" id="copy-link-btn">Copy</button></div>
@@ -415,8 +447,8 @@ function renderInviteBanner() {
   el.hidden = false;
   el.innerHTML = `
     <div>
-      <strong>You've been invited to join "${community.name}"</strong>
-      ${community.description ? `<p class="invite-desc">${community.description}</p>` : ""}
+      <strong>You've been invited to join "${escapeHtml(community.name)}"</strong>
+      ${community.description ? `<p class="invite-desc">${escapeHtml(community.description)}</p>` : ""}
       <span class="invite-meta">${community.members.length} member${community.members.length === 1 ? "" : "s"} · code ${community.code}</span>
     </div>
     <div class="invite-banner-actions">
@@ -472,8 +504,8 @@ function renderAuthArea() {
   }
   el.innerHTML = `
     <div class="user-chip">
-      ${user.photoURL ? `<img class="user-avatar user-avatar-img" src="${user.photoURL}" alt="" />` : `<span class="user-avatar">${initials(user.displayName || user.email)}</span>`}
-      <span class="user-meta"><strong>${user.displayName || "Signed in"}</strong><span>${user.email}</span></span>
+      ${user.photoURL ? `<img class="user-avatar user-avatar-img" src="${escapeHtml(user.photoURL)}" alt="" />` : `<span class="user-avatar">${initials(user.displayName || user.email)}</span>`}
+      <span class="user-meta"><strong>${escapeHtml(user.displayName || "Signed in")}</strong><span>${escapeHtml(user.email)}</span></span>
       <button class="btn btn-ghost btn-small" id="signout-btn">Sign out</button>
     </div>
   `;
@@ -498,20 +530,24 @@ function renderMyCommunities() {
     const isOwner = c.ownerEmail === user.email;
     return `
       <div class="event-card community-card">
-        <h3>${c.name}</h3>
-        <div class="meta">${isOwner ? "You created this" : `Created by ${c.ownerName}`} · code ${c.code}</div>
-        <div class="desc">${c.description || "No description yet."}</div>
+        <h3>${escapeHtml(c.name)}</h3>
+        <div class="meta">${isOwner ? "You created this" : `Created by ${escapeHtml(c.ownerName)}`} · code ${c.code}</div>
+        <div class="desc">${c.description ? escapeHtml(c.description) : "No description yet."}</div>
         <div class="member-row">
-          ${c.members.slice(0, 8).map(m => `<span class="user-avatar small" title="${m.name}">${initials(m.name)}</span>`).join("")}
+          ${c.members.slice(0, 8).map(m => `<span class="user-avatar small" title="${escapeHtml(m.name)}">${initials(m.name)}</span>`).join("")}
           <span class="member-count">${c.members.length} member${c.members.length === 1 ? "" : "s"}</span>
         </div>
         <div class="community-card-actions">
+          <button class="btn btn-primary btn-small" data-open="${c.code}">Open</button>
           <button class="btn btn-ghost btn-small" data-share="${c.code}">Share invite</button>
-          ${!isOwner ? `<button class="btn btn-ghost btn-small" data-leave="${c.code}">Leave</button>` : ""}
+          ${isOwner ? `<button class="btn btn-danger btn-small" data-delete="${c.code}">Delete</button>` : `<button class="btn btn-ghost btn-small" data-leave="${c.code}">Leave</button>`}
         </div>
       </div>`;
   }).join("");
 
+  el.querySelectorAll("[data-open]").forEach(btn => {
+    btn.addEventListener("click", () => openCommunityRoom(btn.dataset.open));
+  });
   el.querySelectorAll("[data-share]").forEach(btn => {
     btn.addEventListener("click", () => {
       const community = connectState.myCommunities.find(c => c.code === btn.dataset.share);
@@ -528,6 +564,352 @@ function renderMyCommunities() {
         btn.disabled = false;
       }
     });
+  });
+  el.querySelectorAll("[data-delete]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const community = connectState.myCommunities.find(c => c.code === btn.dataset.delete);
+      if (community) showDeleteConfirmModal(community);
+    });
+  });
+}
+
+/* ---------- Community room (open a joined/created community: chat feed,
+   event scheduling, fitness tips) ---------- */
+function formatTimeAgo(ts) {
+  if (!ts || typeof ts.toDate !== "function") return "Just now";
+  const diffMs = Date.now() - ts.toDate().getTime();
+  const mins = Math.round(diffMs / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.round(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return ts.toDate().toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function formatEventWhen(ms) {
+  return new Date(ms).toLocaleString(undefined, {
+    weekday: "short", month: "short", day: "numeric", hour: "numeric", minute: "2-digit"
+  });
+}
+
+function buildRoomHtml(community) {
+  return `
+    <button class="modal-close" aria-label="Close">&times;</button>
+    <div class="room-head">
+      <div>
+        <h3>${escapeHtml(community.name)}</h3>
+        <div class="room-meta">${community.ownerEmail === connectState.currentUser.email ? "You created this" : `Created by ${escapeHtml(community.ownerName)}`} · code ${community.code} · ${community.members.length} member${community.members.length === 1 ? "" : "s"}</div>
+      </div>
+    </div>
+    <div class="room-tabs" role="tablist">
+      <button class="room-tab-btn active" data-room-tab="feed" type="button">Feed</button>
+      <button class="room-tab-btn" data-room-tab="events" type="button">Events</button>
+      <button class="room-tab-btn" data-room-tab="tips" type="button">Fitness Tips</button>
+    </div>
+    <div class="room-panel" id="room-panel-feed">
+      <div class="room-feed-list" id="room-feed-list"><p class="sq-placeholder">Loading…</p></div>
+      <form class="room-post-form" id="room-post-form">
+        <input type="text" id="room-post-input" maxlength="500" placeholder="Share something with the community…" autocomplete="off" required />
+        <button type="submit" class="btn btn-primary btn-small">Post</button>
+      </form>
+    </div>
+    <div class="room-panel" id="room-panel-events" hidden>
+      <div class="room-events-toolbar">
+        <button class="btn btn-ghost btn-small" id="room-new-event-btn" type="button">+ Schedule an event</button>
+      </div>
+      <form class="modal-form room-event-form" id="room-event-form" hidden>
+        <label>Event title <input id="re-title" type="text" required maxlength="80" placeholder="e.g. Saturday Sunrise 5K" /></label>
+        <div class="room-event-form-row">
+          <label>Date &amp; time <input id="re-when" type="datetime-local" required /></label>
+          <label>Location <input id="re-location" type="text" maxlength="100" placeholder="e.g. Cubbon Park, Gate 2" /></label>
+        </div>
+        <label>Details <textarea id="re-desc" rows="2" maxlength="240" placeholder="What to bring, pace, distance…"></textarea></label>
+        <p class="modal-error" id="re-error" hidden></p>
+        <div class="room-event-form-actions">
+          <button type="submit" class="btn btn-primary btn-small">Schedule</button>
+          <button type="button" class="btn btn-ghost btn-small" id="re-cancel-btn">Cancel</button>
+        </div>
+      </form>
+      <div class="room-events-list" id="room-events-list"><p class="sq-placeholder">Loading…</p></div>
+    </div>
+    <div class="room-panel" id="room-panel-tips" hidden>
+      <div class="room-tips-list">
+        ${FITNESS_TIPS.map(t => `
+          <div class="room-tip-card">
+            <span class="filter-chip active room-tip-tag">${escapeHtml(t.tag)}</span>
+            <h4>${escapeHtml(t.title)}</h4>
+            <p>${escapeHtml(t.body)}</p>
+          </div>`).join("")}
+      </div>
+    </div>
+    <div class="room-foot-actions">
+      <button class="btn btn-ghost btn-small" id="room-share-btn" type="button">Share invite</button>
+      ${community.ownerEmail === connectState.currentUser.email
+        ? `<button class="btn btn-danger btn-small" id="room-delete-btn" type="button">Delete community</button>`
+        : `<button class="btn btn-ghost btn-small" id="room-leave-btn" type="button">Leave community</button>`}
+    </div>
+  `;
+}
+
+function renderRoomFeedList(box, posts) {
+  const el = box.querySelector("#room-feed-list");
+  if (!el) return;
+  const user = connectState.currentUser;
+  if (posts.length === 0) {
+    el.innerHTML = `<p class="sq-placeholder">No messages yet — be the first to say hello.</p>`;
+  } else {
+    el.innerHTML = posts.map(p => `
+      <div class="room-post ${p.authorEmail === user.email ? "room-post-mine" : ""}">
+        <span class="user-avatar small room-post-avatar" title="${escapeHtml(p.authorName)}">${initials(p.authorName)}</span>
+        <div class="room-post-body">
+          <div class="room-post-head"><strong>${escapeHtml(p.authorName)}</strong><span class="room-post-time">${formatTimeAgo(p.createdAt)}</span></div>
+          <p>${escapeHtml(p.text)}</p>
+        </div>
+      </div>`).join("");
+  }
+  el.scrollTop = el.scrollHeight;
+}
+
+function renderRoomEventsList(box, code, events) {
+  const el = box.querySelector("#room-events-list");
+  if (!el) return;
+  const user = connectState.currentUser;
+  const now = Date.now();
+  const sorted = events.slice().sort((a, b) => (a.startsAt || Infinity) - (b.startsAt || Infinity));
+  if (sorted.length === 0) {
+    el.innerHTML = `<p class="sq-placeholder">No events scheduled yet — schedule the first one.</p>`;
+  } else {
+    el.innerHTML = sorted.map(ev => {
+      const rsvps = ev.rsvps || [];
+      const going = rsvps.some(r => r.email === user.email);
+      const isPast = ev.startsAt && ev.startsAt < now;
+      return `
+        <div class="event-card room-event-card ${isPast ? "room-event-past" : ""}">
+          ${isPast ? `<span class="kpi-pill kpi-warn room-event-past-badge">Past</span>` : ""}
+          <h3>${escapeHtml(ev.title)}</h3>
+          <div class="meta">${ev.startsAt ? formatEventWhen(ev.startsAt) : "Time TBD"}${ev.location ? ` · ${escapeHtml(ev.location)}` : ""}</div>
+          ${ev.description ? `<div class="desc">${escapeHtml(ev.description)}</div>` : ""}
+          <div class="room-event-footer">
+            <div class="member-row">
+              ${rsvps.slice(0, 6).map(r => `<span class="user-avatar small" title="${escapeHtml(r.name)}">${initials(r.name)}</span>`).join("")}
+              <span class="member-count">${rsvps.length} going</span>
+            </div>
+            <button class="btn ${going ? "btn-ghost" : "btn-primary"} btn-small" data-rsvp="${ev.id}">${going ? "Can't go" : "I'm in"}</button>
+          </div>
+          <div class="room-event-meta-sub">Scheduled by ${escapeHtml(ev.createdByName)}</div>
+        </div>`;
+    }).join("");
+  }
+  el.querySelectorAll("[data-rsvp]").forEach(btn => {
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      try {
+        await toggleRsvp(code, btn.dataset.rsvp);
+      } catch (err) {
+        showCommunityError(err, "Couldn't update your RSVP");
+      }
+      btn.disabled = false;
+    });
+  });
+}
+
+async function sendPost(code, text) {
+  const fx = window.__firebaseModular;
+  const user = connectState.currentUser;
+  await fx.addDoc(fx.collection(connectState.db, "communities", code, "posts"), {
+    text,
+    authorEmail: user.email,
+    authorName: user.displayName || user.email,
+    createdAt: fx.serverTimestamp()
+  });
+}
+
+async function createEvent(code, { title, startsAt, location, description }) {
+  const fx = window.__firebaseModular;
+  const user = connectState.currentUser;
+  const member = { name: user.displayName || user.email, email: user.email };
+  await fx.addDoc(fx.collection(connectState.db, "communities", code, "events"), {
+    title, startsAt: startsAt || null, location, description,
+    createdByEmail: user.email,
+    createdByName: user.displayName || user.email,
+    createdAt: fx.serverTimestamp(),
+    rsvps: [member]
+  });
+}
+
+async function toggleRsvp(code, eventId) {
+  const fx = window.__firebaseModular;
+  const user = connectState.currentUser;
+  const ref = fx.doc(connectState.db, "communities", code, "events", eventId);
+  return fx.runTransaction(connectState.db, async (tx) => {
+    const snap = await tx.get(ref);
+    if (!snap.exists()) return;
+    const rsvps = snap.data().rsvps || [];
+    const mine = rsvps.find(r => r.email === user.email);
+    if (mine) {
+      tx.update(ref, { rsvps: fx.arrayRemove(mine) });
+    } else {
+      tx.update(ref, { rsvps: fx.arrayUnion({ name: user.displayName || user.email, email: user.email }) });
+    }
+  });
+}
+
+async function deleteCommunityCascade(code) {
+  const fx = window.__firebaseModular;
+  const db = connectState.db;
+  for (const sub of ["posts", "events"]) {
+    const snap = await fx.getDocs(fx.collection(db, "communities", code, sub));
+    for (const d of snap.docs) await fx.deleteDoc(d.ref);
+  }
+  await fx.deleteDoc(fx.doc(db, "communities", code));
+}
+
+function showDeleteConfirmModal(community) {
+  openModal(`
+    <button class="modal-close" aria-label="Close">&times;</button>
+    <h3>Delete "${escapeHtml(community.name)}"?</h3>
+    <p class="modal-note">This permanently deletes the community, its feed and its scheduled events for every
+    member. Only you can do this, since you created it — and it can't be undone.</p>
+    <p class="modal-error" id="delete-error" hidden></p>
+    <div class="room-event-form-actions">
+      <button class="btn btn-danger" id="confirm-delete-btn">Delete permanently</button>
+      <button class="btn btn-ghost" id="cancel-delete-btn">Cancel</button>
+    </div>
+  `, (box) => {
+    box.querySelector(".modal-close").addEventListener("click", closeModal);
+    box.querySelector("#cancel-delete-btn").addEventListener("click", closeModal);
+    box.querySelector("#confirm-delete-btn").addEventListener("click", async (e) => {
+      e.target.disabled = true;
+      e.target.textContent = "Deleting…";
+      try {
+        await deleteCommunityCascade(community.code);
+        closeModal();
+      } catch (err) {
+        const errorEl = box.querySelector("#delete-error");
+        errorEl.textContent = (err && err.message) || "Couldn't delete the community. Please try again.";
+        errorEl.hidden = false;
+        e.target.disabled = false;
+        e.target.textContent = "Delete permanently";
+      }
+    });
+  });
+}
+
+function openCommunityRoom(code) {
+  const community = connectState.myCommunities.find(c => c.code === code);
+  if (!community) return;
+
+  connectState.room = { code, unsubPosts: null, unsubEvents: null };
+
+  openModal(buildRoomHtml(community), (box) => {
+    box.classList.add("modal-box-room");
+    const fx = window.__firebaseModular;
+
+    box.querySelector(".modal-close").addEventListener("click", closeModal);
+
+    box.querySelectorAll(".room-tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        box.querySelectorAll(".room-tab-btn").forEach(b => b.classList.toggle("active", b === btn));
+        box.querySelectorAll(".room-panel").forEach(p => { p.hidden = p.id !== `room-panel-${btn.dataset.roomTab}`; });
+      });
+    });
+
+    box.querySelector("#room-share-btn").addEventListener("click", () => {
+      closeModal();
+      showShareModal(community.code, community.name);
+    });
+    const leaveBtn = box.querySelector("#room-leave-btn");
+    if (leaveBtn) leaveBtn.addEventListener("click", async () => {
+      leaveBtn.disabled = true;
+      try {
+        await leaveCommunity(community.code);
+        closeModal();
+      } catch (err) {
+        showCommunityError(err, "Couldn't leave that community");
+        leaveBtn.disabled = false;
+      }
+    });
+    const deleteBtn = box.querySelector("#room-delete-btn");
+    if (deleteBtn) deleteBtn.addEventListener("click", () => {
+      closeModal();
+      showDeleteConfirmModal(community);
+    });
+
+    box.querySelector("#room-post-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const input = box.querySelector("#room-post-input");
+      const text = input.value.trim();
+      if (!text) return;
+      input.disabled = true;
+      try {
+        await sendPost(code, text);
+        input.value = "";
+      } catch (err) {
+        showCommunityError(err, "Couldn't post that message");
+      }
+      input.disabled = false;
+      input.focus();
+    });
+
+    const eventForm = box.querySelector("#room-event-form");
+    box.querySelector("#room-new-event-btn").addEventListener("click", () => {
+      eventForm.hidden = !eventForm.hidden;
+    });
+    box.querySelector("#re-cancel-btn").addEventListener("click", () => { eventForm.hidden = true; eventForm.reset(); });
+    eventForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const title = box.querySelector("#re-title").value.trim();
+      const when = box.querySelector("#re-when").value;
+      const location = box.querySelector("#re-location").value.trim();
+      const description = box.querySelector("#re-desc").value.trim();
+      if (!title) return;
+      const submitBtn = eventForm.querySelector("button[type=submit]");
+      submitBtn.disabled = true;
+      try {
+        await createEvent(code, {
+          title,
+          startsAt: when ? new Date(when).getTime() : null,
+          location, description
+        });
+        eventForm.reset();
+        eventForm.hidden = true;
+      } catch (err) {
+        const errorEl = box.querySelector("#re-error");
+        errorEl.textContent = (err && err.message) || "Couldn't schedule that event.";
+        errorEl.hidden = false;
+      }
+      submitBtn.disabled = false;
+    });
+
+    const postsQuery = fx.query(
+      fx.collection(connectState.db, "communities", code, "posts"),
+      fx.orderBy("createdAt", "asc"),
+      fx.limit(200)
+    );
+    connectState.room.unsubPosts = fx.onSnapshot(postsQuery, (snap) => {
+      renderRoomFeedList(box, snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, (err) => {
+      showCommunityError(err, "Couldn't load the feed");
+      const el = box.querySelector("#room-feed-list");
+      if (el) el.innerHTML = `<p class="sq-placeholder">Couldn't load the feed.</p>`;
+    });
+
+    const eventsQuery = fx.query(fx.collection(connectState.db, "communities", code, "events"));
+    connectState.room.unsubEvents = fx.onSnapshot(eventsQuery, (snap) => {
+      renderRoomEventsList(box, code, snap.docs.map(d => ({ id: d.id, ...d.data() })));
+    }, (err) => {
+      showCommunityError(err, "Couldn't load events");
+      const el = box.querySelector("#room-events-list");
+      if (el) el.innerHTML = `<p class="sq-placeholder">Couldn't load events.</p>`;
+    });
+  }, () => {
+    if (connectState.room) {
+      if (connectState.room.unsubPosts) connectState.room.unsubPosts();
+      if (connectState.room.unsubEvents) connectState.room.unsubEvents();
+      connectState.room = null;
+    }
   });
 }
 

@@ -346,3 +346,39 @@ table.scale-table tbody tr:hover td { background: color-mix(in srgb, var(--brand
   main { padding: 18px 14px 40px; }
   .hero h1 { font-size: 24px; }
 }
+
+/* ---------- Visual polish: ambient background wash + gradient accents ---------- */
+body { position: relative; isolation: isolate; }
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(680px circle at 6% -10%, color-mix(in srgb, var(--brand) 14%, transparent), transparent 60%),
+    radial-gradient(520px circle at 100% 0%, color-mix(in srgb, var(--accent) 11%, transparent), transparent 55%);
+  pointer-events: none;
+}
+
+.topbar {
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  backdrop-filter: blur(10px) saturate(140%);
+  -webkit-backdrop-filter: blur(10px) saturate(140%);
+}
+
+.brand-mark { box-shadow: var(--shadow-sm), 0 0 0 1px color-mix(in srgb, var(--brand) 30%, transparent); }
+
+.tab-btn.active { background: linear-gradient(135deg, var(--brand), var(--brand-strong)); }
+
+.btn-primary { background: linear-gradient(135deg, var(--brand), var(--brand-strong)); }
+
+.hero h1 {
+  color: var(--ink);
+  background: linear-gradient(120deg, var(--ink) 30%, var(--brand));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.back-link { transition: transform 0.15s ease; }
+.back-link:hover { transform: translateX(-3px); }

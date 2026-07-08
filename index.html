@@ -302,13 +302,13 @@
     getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
   import {
-    initializeFirestore, doc, getDoc, setDoc, collection, query, where,
-    onSnapshot, runTransaction, serverTimestamp, arrayUnion, arrayRemove
+    initializeFirestore, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, collection, query, where,
+    orderBy, limit, onSnapshot, runTransaction, serverTimestamp, arrayUnion, arrayRemove
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
   window.__firebaseModular = {
     initializeApp, getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged,
-    initializeFirestore, doc, getDoc, setDoc, collection, query, where,
-    onSnapshot, runTransaction, serverTimestamp, arrayUnion, arrayRemove
+    initializeFirestore, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, collection, query, where,
+    orderBy, limit, onSnapshot, runTransaction, serverTimestamp, arrayUnion, arrayRemove
   };
 </script>
 <script src="js/firebase-config.js"></script>

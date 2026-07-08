@@ -160,16 +160,48 @@ This takes about 5 minutes and is free for a project at this scale.
            && request.resource.data.memberEmails == [request.auth.token.email];
          allow update: if request.auth != null
            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["members", "memberEmails"]);
-         allow delete: if false;
+         allow delete: if request.auth != null && resource.data.ownerEmail == request.auth.token.email;
+
+         match /posts/{postId} {
+           allow read: if request.auth != null;
+           allow create: if request.auth != null
+             && request.resource.data.authorEmail == request.auth.token.email
+             && request.auth.token.email in get(/databases/$(database)/documents/communities/$(communityCode)).data.memberEmails;
+           allow update: if false;
+           allow delete: if request.auth != null
+             && (resource.data.authorEmail == request.auth.token.email
+                 || get(/databases/$(database)/documents/communities/$(communityCode)).data.ownerEmail == request.auth.token.email);
+         }
+
+         match /events/{eventId} {
+           allow read: if request.auth != null;
+           allow create: if request.auth != null
+             && request.resource.data.createdByEmail == request.auth.token.email
+             && request.auth.token.email in get(/databases/$(database)/documents/communities/$(communityCode)).data.memberEmails;
+           allow update: if request.auth != null
+             && request.auth.token.email in get(/databases/$(database)/documents/communities/$(communityCode)).data.memberEmails
+             && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["rsvps"]);
+           allow delete: if request.auth != null
+             && (resource.data.createdByEmail == request.auth.token.email
+                 || get(/databases/$(database)/documents/communities/$(communityCode)).data.ownerEmail == request.auth.token.email);
+         }
        }
      }
    }
    ```
 
-   This means: only signed-in users can read or write; you can only create a community
-   naming yourself as the owner and sole starting member; updates can only touch the
-   membership fields (join/leave), never rewrite the name, description or owner; and
-   nothing can be deleted through the client.
+   This means: only signed-in members can read or write; you can only create a community
+   naming yourself as the owner and sole starting member; updates to a community can only
+   touch the membership fields (join/leave), never rewrite the name, description or owner;
+   only the owner can delete a community; and within it, only current members can post to
+   the feed or schedule events, only the RSVP list on an event can be changed after it's
+   created, and a post/event can only be deleted by whoever created it or the community's
+   owner (so deleting a community can clean up its own feed and events first).
+
+   > If your Firebase project's Firestore rules currently only have the top-level
+   > `communities/{communityCode}` block (no `posts`/`events` matches, and `allow delete: if
+   > false`), you're on an older version — replace the whole rules block with the one above
+   > and click **Publish** again to unlock Delete, the community feed and event scheduling.
 
 5. **Project settings** (gear icon, top left) → **General** → scroll to **Your apps**
    → **Add app** → choose **Web** (`</>`) → register it (nickname doesn't matter) →
@@ -279,8 +311,9 @@ football-analyzer/js/app.js      Video tagging, free-text matcher, famous match 
 
 ## Extending it further (optional, if you want to go further)
 
-- Add Firestore rules or a Cloud Function to let a community owner rename/delete a
-  community or remove a member, rather than only supporting join/leave from the client.
+- The owner can already delete a community (see "Setting up real accounts" above for the
+  rules that enable it). A Cloud Function could extend this further: let an owner rename a
+  community, remove a specific member, or moderate/delete an individual feed post.
 - Expand the Cultural Practice Library and the Wellness Advisor's knowledge base
   (`js/data.js`), and add source citations per practice.
 - Add a "my SQ history" view backed by Firestore (per signed-in user) instead of the
