@@ -20,7 +20,10 @@ const connectState = {
   pendingInviteCode: null,
   pendingInviteCommunity: null, // "not-found" | community data object | null (not yet resolved)
   myCommunities: [],
-  room: null // { code, unsubPosts, unsubEvents } while the community room modal is open
+  room: null, // { code, unsubPosts, unsubEvents } while the community room modal is open
+  notifSubs: {}, // community code -> unsubscribe function for its background "new message" listener
+  notifications: [], // recent cross-community message notifications, newest first
+  notifLastSeen: {} // community code -> ms timestamp of the newest message already surfaced (persisted per account)
 };
 
 // Rooted's own physical-fitness tips & advancements — static, in-house content
@@ -490,7 +493,199 @@ function subscribeMyCommunities() {
   connectState.unsubscribeMyCommunities = fx.onSnapshot(q, (snap) => {
     connectState.myCommunities = snap.docs.map(d => d.data());
     renderMyCommunities();
+    reconcileNotifSubscriptions();
   }, (err) => showCommunityError(err, "Couldn't load your communities"));
+}
+
+/* ---------- Notifications (WhatsApp-style bell: a background listener per
+   joined community surfaces new messages — who, what community, what they
+   said — without the room being open). "Last seen" per community is kept in
+   localStorage (namespaced per Google account) so a message sent while this
+   browser tab was closed still shows up as a notification next visit,
+   without replaying a whole community's chat history the first time it's
+   ever seen. ---------- */
+const NOTIF_MAX = 20;
+
+function notifLastSeenKey(email) {
+  return `rooted-notif-lastseen-${email}`;
+}
+
+function loadNotifLastSeen() {
+  const user = connectState.currentUser;
+  connectState.notifLastSeen = {};
+  if (!user) return;
+  try {
+    connectState.notifLastSeen = JSON.parse(localStorage.getItem(notifLastSeenKey(user.email))) || {};
+  } catch {
+    connectState.notifLastSeen = {};
+  }
+}
+
+function saveNotifLastSeen() {
+  const user = connectState.currentUser;
+  if (!user) return;
+  try {
+    localStorage.setItem(notifLastSeenKey(user.email), JSON.stringify(connectState.notifLastSeen));
+  } catch {
+    // Storage can be unavailable (private browsing, quota) — notifications still work for this session.
+  }
+}
+
+function formatTimeAgoMs(ms) {
+  if (!ms) return "Just now";
+  const mins = Math.round((Date.now() - ms) / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.round(hrs / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(ms).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function addNotification(n) {
+  connectState.notifications.unshift({ ...n, read: false });
+  if (connectState.notifications.length > NOTIF_MAX) connectState.notifications.length = NOTIF_MAX;
+  renderNotifBell();
+  renderNotifPanel();
+}
+
+function markCommunityNotifsRead(code) {
+  let changed = false;
+  connectState.notifications.forEach(n => {
+    if (n.code === code && !n.read) { n.read = true; changed = true; }
+  });
+  if (changed) { renderNotifBell(); renderNotifPanel(); }
+}
+
+// One listener per joined community, watching just its most recent posts. Firestore fires
+// onSnapshot once immediately with every doc already in the query window (marked "added" the
+// same as a genuinely new doc) — `notifying` stays false through that first callback so a
+// community's existing chat history never floods the bell the moment you join or reload.
+function subscribeCommunityNotifications(code, name) {
+  if (connectState.notifSubs[code]) return;
+  const fx = window.__firebaseModular;
+  const q = fx.query(
+    fx.collection(connectState.db, "communities", code, "posts"),
+    fx.orderBy("createdAt", "desc"),
+    fx.limit(20)
+  );
+  let baseline = connectState.notifLastSeen[code] || 0;
+  let notifying = typeof connectState.notifLastSeen[code] === "number";
+
+  connectState.notifSubs[code] = fx.onSnapshot(q, (snap) => {
+    const user = connectState.currentUser;
+    const additions = snap.docChanges()
+      .filter(c => c.type === "added")
+      .map(c => ({ id: c.doc.id, data: c.doc.data() }))
+      .sort((a, b) => (a.data.createdAt?.toMillis?.() || 0) - (b.data.createdAt?.toMillis?.() || 0));
+
+    let maxMs = baseline;
+    additions.forEach(({ id, data }) => {
+      const ts = data.createdAt && typeof data.createdAt.toMillis === "function" ? data.createdAt.toMillis() : null;
+      if (ts === null) return; // not yet server-confirmed
+      if (ts > maxMs) maxMs = ts;
+      if (!notifying || ts <= baseline) return;
+      if (!user || data.authorEmail === user.email) return;
+      if (connectState.room && connectState.room.code === code) return; // already looking at this chat
+      addNotification({ id: `${code}_${id}`, code, communityName: name, authorName: data.authorName || "Someone", text: data.text || "", createdAtMs: ts });
+    });
+
+    baseline = maxMs;
+    notifying = true;
+    connectState.notifLastSeen[code] = maxMs;
+    saveNotifLastSeen();
+  }, (err) => console.error("Notification listener failed for", code, err));
+}
+
+function reconcileNotifSubscriptions() {
+  const codes = new Set(connectState.myCommunities.map(c => c.code));
+  connectState.myCommunities.forEach(c => subscribeCommunityNotifications(c.code, c.name));
+  Object.keys(connectState.notifSubs).forEach(code => {
+    if (!codes.has(code)) {
+      connectState.notifSubs[code]();
+      delete connectState.notifSubs[code];
+    }
+  });
+}
+
+function unsubscribeAllNotifs() {
+  Object.values(connectState.notifSubs).forEach(unsub => unsub());
+  connectState.notifSubs = {};
+}
+
+function renderNotifBell() {
+  const wrap = document.getElementById("notif-wrap");
+  wrap.hidden = !connectState.currentUser;
+  const unread = connectState.notifications.filter(n => !n.read).length;
+  const badge = document.getElementById("notif-badge");
+  badge.hidden = unread === 0;
+  if (unread > 0) badge.textContent = unread > 9 ? "9+" : String(unread);
+}
+
+function renderNotifPanel() {
+  const list = document.getElementById("notif-panel-list");
+  if (!list) return;
+  if (connectState.notifications.length === 0) {
+    list.innerHTML = `<p class="notif-empty">No messages yet. New messages from your communities will show up here.</p>`;
+    return;
+  }
+  list.innerHTML = connectState.notifications.map(n => `
+    <button class="notif-item ${n.read ? "" : "unread"}" data-notif-code="${n.code}">
+      <span class="user-avatar small" title="${escapeHtml(n.authorName)}">${initials(n.authorName)}</span>
+      <span class="notif-item-body">
+        <span class="notif-item-head"><strong>${escapeHtml(n.authorName)}</strong><span class="notif-item-time">${formatTimeAgoMs(n.createdAtMs)}</span></span>
+        <span class="notif-item-community">${escapeHtml(n.communityName)}</span>
+        <span class="notif-item-text">${escapeHtml(n.text)}</span>
+      </span>
+    </button>`).join("");
+  list.querySelectorAll("[data-notif-code]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const code = btn.dataset.notifCode;
+      closeNotifPanel();
+      markCommunityNotifsRead(code);
+      openCommunityRoom(code);
+    });
+  });
+}
+
+function closeNotifPanel() {
+  const panel = document.getElementById("notif-panel");
+  if (panel.hidden) return;
+  panel.hidden = true;
+  document.getElementById("notif-bell-btn").setAttribute("aria-expanded", "false");
+}
+
+function toggleNotifPanel() {
+  const panel = document.getElementById("notif-panel");
+  const btn = document.getElementById("notif-bell-btn");
+  const willOpen = panel.hidden;
+  if (!willOpen) { closeNotifPanel(); return; }
+  panel.hidden = false;
+  btn.setAttribute("aria-expanded", "true");
+  renderNotifPanel(); // render first so unread items still highlight this once, whatsapp-style
+  connectState.notifications.forEach(n => { n.read = true; });
+  renderNotifBell();
+}
+
+function initNotifBell() {
+  const btn = document.getElementById("notif-bell-btn");
+  const panel = document.getElementById("notif-panel");
+  btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    toggleNotifPanel();
+  });
+  document.getElementById("notif-clear-btn").addEventListener("click", (e) => {
+    e.stopPropagation();
+    connectState.notifications = [];
+    renderNotifBell();
+    renderNotifPanel();
+  });
+  panel.addEventListener("click", (e) => e.stopPropagation());
+  document.addEventListener("click", () => closeNotifPanel());
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeNotifPanel();
+  });
 }
 
 /* ---------- Rendering ---------- */
@@ -801,6 +996,7 @@ function openCommunityRoom(code) {
   const community = connectState.myCommunities.find(c => c.code === code);
   if (!community) return;
 
+  markCommunityNotifsRead(code);
   connectState.room = { code, unsubPosts: null, unsubEvents: null };
 
   openModal(buildRoomHtml(community), (box) => {
@@ -916,6 +1112,7 @@ function openCommunityRoom(code) {
 /* ---------- Init ---------- */
 async function initCommunityConnect() {
   initModal();
+  initNotifBell();
   handleInviteFromUrl();
 
   if (typeof FIREBASE_CONFIG === "undefined" || typeof window.__firebaseModular === "undefined" || FIREBASE_CONFIG_IS_PLACEHOLDER) {
@@ -944,6 +1141,14 @@ async function initCommunityConnect() {
   window.__firebaseModular.onAuthStateChanged(connectState.auth, (user) => {
     connectState.currentUser = user;
     renderAuthArea();
+    if (user) {
+      loadNotifLastSeen();
+    } else {
+      unsubscribeAllNotifs();
+      connectState.notifications = [];
+      connectState.notifLastSeen = {};
+    }
+    renderNotifBell();
     subscribeMyCommunities();
     resolvePendingInvite();
     renderInviteBanner();

@@ -27,6 +27,20 @@
     <button class="tab-btn" role="tab" aria-selected="false" data-tab="team">Team</button>
   </nav>
 
+  <div class="notif-wrap" id="notif-wrap" hidden>
+    <button id="notif-bell-btn" class="notif-bell" aria-label="Notifications" aria-haspopup="true" aria-expanded="false" type="button">
+      <span class="notif-bell-icon" aria-hidden="true">&#128276;</span>
+      <span class="notif-badge" id="notif-badge" hidden>0</span>
+    </button>
+    <div class="notif-panel" id="notif-panel" hidden>
+      <div class="notif-panel-head">
+        <strong>Notifications</strong>
+        <button class="notif-clear-btn" id="notif-clear-btn" type="button">Clear all</button>
+      </div>
+      <div class="notif-panel-list" id="notif-panel-list"></div>
+    </div>
+  </div>
+
   <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
     <span class="icon-sun">&#9728;</span><span class="icon-moon">&#9789;</span>
   </button>
