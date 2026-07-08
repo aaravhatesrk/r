@@ -55,6 +55,38 @@ function scoreQuestionAgainstMistakes(text) {
     .sort((a, b) => b.hits - a.hits);
 }
 
+/* Broader terms per category so a general question ("any tips on shooting?",
+   "how do I get better as a keeper?") still lands somewhere useful even when
+   it doesn't match a specific mistake's keywords. Keeps Coach from dead-ending
+   on well-formed but generic questions. */
+const CATEGORY_SYNONYMS = {
+  "first-touch": ["first touch", "touch", "ball control", "receiving", "control the ball", "trapping"],
+  "passing": ["passing", "pass", "passes", "vision", "distribution", "build up play", "build-up play"],
+  "dribbling": ["dribbling", "dribble", "1v1", "one v one", "take people on", "beat a defender", "skills", "tricks"],
+  "shooting": ["shooting", "shoot", "finishing", "scoring", "goals", "strikes", "hitting the target"],
+  "defending": ["defending", "defence", "defense", "tackling", "tackle", "marking", "1v1 defending"],
+  "positioning": ["positioning", "off the ball", "movement", "shape", "spacing", "runs"],
+  "decision-making": ["decision making", "decision-making", "game awareness", "reading the game", "game intelligence", "composure"],
+  "goalkeeping": ["goalkeeping", "goalkeeper", "keeper", "goalkeeping tips", "shot stopping", "shot-stopping", "saves"]
+};
+
+/* Recognizably generic asks ("how can I improve", "any advice?") with no
+   specific topic attached — these should never dead-end into "no match". */
+const GENERIC_QUESTION_PATTERNS = [
+  "how can i improve", "how do i improve", "how do i get better", "how can i get better",
+  "any tips", "any advice", "general advice", "what should i work on", "help me improve",
+  "help me get better", "where do i start", "what should i practice", "give me a tip",
+  "give me advice", "what do i need to work on"
+];
+
+function scoreQuestionAgainstCategories(text) {
+  const raw = text.toLowerCase();
+  return SKILL_CATEGORIES
+    .map(c => ({ category: c, hits: (CATEGORY_SYNONYMS[c.id] || []).filter(k => raw.includes(k)).length }))
+    .filter(s => s.hits > 0)
+    .sort((a, b) => b.hits - a.hits);
+}
+
 function mistakeAnswerHtml(mistake, heading) {
   const c = categoryById[mistake.categoryId];
   return `
@@ -78,6 +110,37 @@ function talkingPointAnswerHtml(match, tp) {
       <p class="ap-lbl">On ${match.teams[0]} vs ${match.teams[1]} (${match.year})</p>
       <p style="font-weight:600">${tp.title} <span class="chip"><span class="chip-dot" style="background:${categoryColor(tp.categoryId)}"></span>${c.icon} ${c.name}</span></p>
       <div class="analyzer-body"><div>${tp.note}</div></div>
+    </div>`;
+}
+
+function categoryAnswerHtml(category) {
+  const sample = MISTAKES[category.id].slice(0, 4);
+  return `
+    <div class="coach-answer">
+      <div class="coach-answer-head"><span class="chip"><span class="chip-dot" style="background:${categoryColor(category.id)}"></span>&#9917; Coach</span></div>
+      <p style="font-weight:600">${category.icon} ${category.name}</p>
+      <p class="ap-lbl">A few of the most common things that show up here</p>
+      <div class="analyzer-body">
+        ${sample.map(m => `<div>${m.label}</div>`).join("")}
+      </div>
+      <p class="sq-placeholder" style="margin-top:8px">Describe what actually happened in one of these situations — what led into it and how it turned out —
+      and Coach will match the specific mistake and give you the why/fix/drill for it.</p>
+    </div>`;
+}
+
+function genericAnswerHtml() {
+  const picks = SKILL_CATEGORIES.slice(0, 4);
+  return `
+    <div class="coach-answer">
+      <div class="coach-answer-head"><span class="chip"><span class="chip-dot" style="background:var(--brand)"></span>&#9917; Coach</span></div>
+      <p style="font-weight:600">No single area jumps out from that yet — here's how to get a sharper answer</p>
+      <div class="analyzer-body">
+        <div>Coach works best on a specific situation, not a general question. Try describing one concrete moment: what
+        happened right before it, what you did, and how it turned out — the same way you'd describe it to a real coach
+        after a match.</div>
+        <div><span class="ml-lbl">Or name an area</span> Ask about any of these directly, e.g. "${picks.map(c => c.name.toLowerCase()).join('", "')}", and Coach will surface the most common mistakes players run into there.</div>
+        <div><span class="ml-lbl">Or browse</span> The Skill Library below lists every mistake Coach recognizes, organized by category — pick one that matches and Coach can go deeper on it.</div>
+      </div>
     </div>`;
 }
 
@@ -111,6 +174,21 @@ function composeCoachAnswer(question) {
     if (match && match.talkingPoints.length) {
       return match.talkingPoints.map(tp => talkingPointAnswerHtml(match, tp)).join("");
     }
+  }
+
+  // No specific mistake matched, but the question names a whole skill area
+  // ("any shooting tips?", "how do I get better as a keeper?") — surface
+  // that category's most common mistakes instead of a dead end.
+  const categoryScored = scoreQuestionAgainstCategories(question);
+  if (categoryScored.length > 0) {
+    return categoryAnswerHtml(categoryScored[0].category);
+  }
+
+  // A recognizably generic ask ("how can I improve?") with no topic and no
+  // context attached — give concrete next steps instead of "no match".
+  const raw = question.toLowerCase();
+  if (GENERIC_QUESTION_PATTERNS.some(p => raw.includes(p))) {
+    return genericAnswerHtml();
   }
 
   return noMatchAnswerHtml();
