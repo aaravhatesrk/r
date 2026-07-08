@@ -380,11 +380,11 @@ table.scale-table td.neg { color: var(--bad); }
 .practice-card .programs-list li { margin-bottom: 6px; }
 .practice-card .programs-list strong { color: var(--ink); }
 
-.team-card input {
-  width: 100%; margin-top: 8px; padding: 8px 10px; border-radius: 8px;
-  border: 1px solid var(--border); background: var(--bg); color: var(--ink); font-size: 13px;
-}
 .team-card .scope { font-size: 12.5px; color: var(--ink-secondary); }
+.team-card .team-name {
+  width: 100%; margin-top: 8px; padding: 8px 10px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg); color: var(--ink); font-size: 13px; font-weight: 600;
+}
 
 .stat-tiles {
   display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

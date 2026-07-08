@@ -441,7 +441,7 @@ function renderTeam() {
       <div class="team-card" style="--c:${currentCountryColor(c)}">
         <h3>${t.role}</h3>
         <div class="scope">${t.scope}</div>
-        <input type="text" placeholder="Add your name" aria-label="Name for ${t.role}" />
+        <div class="team-name">${t.name}</div>
       </div>`;
   }).join("");
 }
