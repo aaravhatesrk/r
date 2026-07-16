@@ -547,31 +547,6 @@ table.scale-table td.neg { color: var(--bad); }
   overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
 }
 
-.waitlist-form label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; }
-.waitlist-row { display: flex; gap: 8px; flex-wrap: wrap; }
-.waitlist-row input[type="email"] {
-  flex: 1 1 220px; min-width: 0; padding: 9px 12px; border-radius: 8px;
-  border: 1px solid var(--border); background: var(--surface); color: var(--ink);
-  font: inherit;
-}
-.waitlist-status { margin: 6px 0 0; font-size: 12.5px; min-height: 1.2em; }
-.waitlist-status.waitlist-success { color: var(--good); }
-.waitlist-status.waitlist-error { color: var(--bad); }
-.waitlist-hint { margin: 6px 0 0; font-size: 11.5px; color: var(--muted); }
-.waitlist-hint a { color: var(--muted); }
-
-.waitlist-inline { max-width: 420px; margin-top: 22px; }
-
-.sq-waitlist-prompt {
-  margin-top: 18px; padding: 16px; border-radius: 10px;
-  background: color-mix(in srgb, var(--brand) 8%, var(--surface));
-  border: 1px solid color-mix(in srgb, var(--brand) 25%, var(--border));
-}
-.sq-waitlist-prompt h4 { margin: 0 0 4px; }
-.sq-waitlist-prompt p { margin: 0 0 10px; color: var(--ink-secondary); }
-
-.footer-waitlist .waitlist-row { flex-wrap: nowrap; }
-
 .skip-link {
   position: absolute; left: -9999px; top: 0; z-index: 100;
   background: var(--surface-raised); color: var(--ink);

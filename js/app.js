@@ -432,47 +432,6 @@ function initTableToggles() {
   });
 }
 
-/* ---------- Waitlist ----------
-   Every .waitlist-form on the site (hero, footer, post-SQ-score) submits here. */
-const WAITLIST_ENDPOINT = "https://formspree.io/f/mrenejqe";
-
-function initWaitlistForms() {
-  document.addEventListener("submit", async (e) => {
-    const form = e.target.closest(".waitlist-form");
-    if (!form) return;
-    e.preventDefault();
-
-    const status = form.querySelector(".waitlist-status");
-    const btn = form.querySelector("button[type=submit]");
-
-    if (WAITLIST_ENDPOINT.includes("YOUR_FORM_ID")) {
-      status.textContent = "Waitlist form isn't connected yet.";
-      status.className = "waitlist-status waitlist-error";
-      return;
-    }
-
-    btn.disabled = true;
-    status.textContent = "";
-    status.className = "waitlist-status";
-    try {
-      const resp = await fetch(WAITLIST_ENDPOINT, {
-        method: "POST",
-        headers: { "Accept": "application/json" },
-        body: new FormData(form)
-      });
-      if (!resp.ok) throw new Error("Request failed");
-      form.reset();
-      status.textContent = "You're on the list — we'll email you when it's ready.";
-      status.className = "waitlist-status waitlist-success";
-    } catch {
-      status.textContent = "Something went wrong — please try again in a moment.";
-      status.className = "waitlist-status waitlist-error";
-    } finally {
-      btn.disabled = false;
-    }
-  });
-}
-
 /* ---------- Team ---------- */
 function renderTeam() {
   const el = document.getElementById("team-grid");
@@ -500,5 +459,4 @@ document.addEventListener("DOMContentLoaded", () => {
   renderStatTiles();
   initTableToggles();
   renderTeam();
-  initWaitlistForms();
 });
