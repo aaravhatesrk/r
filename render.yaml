@@ -1,11 +1,11 @@
-# CSP note: "praxis" also serves /football-analyzer/ (same staticPublishPath ".").
+# CSP note: "rooted" also serves /football-analyzer/ (same staticPublishPath ".").
 # Its allowances (gstatic, googleapis, accounts.google.com) come from the Community
 # Hub's Firebase sign-in on the main site — verify at securityheaders.com and by
 # actually signing in after deploy; if anything breaks, check DevTools > Console for
 # the blocked origin and add it to the relevant directive below.
 services:
   - type: web
-    name: praxis
+    name: rooted
     runtime: static
     buildCommand: ""
     staticPublishPath: .
