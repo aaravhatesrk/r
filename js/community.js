@@ -156,6 +156,10 @@ function showCommunityError(err, context) {
     message = "Permission denied — check that the Firestore security rules from the README are published on your Firebase project.";
   } else if (err && (err.code === "unavailable" || /client is offline/i.test(err.message || ""))) {
     message = "Couldn't reach the backend (client is offline). Check your internet connection, and if it's fine, make sure a Cloud Firestore database has actually been created for this project in the Firebase Console (Build → Firestore Database → Create database) — this exact error is what shows up when Authentication is set up but Firestore never was. Ad blockers or restrictive networks can also cause this.";
+  } else if (err && err.code === "auth/internal-error") {
+    message = "Google didn't complete the sign-in handshake — we already retried via full-page redirect, so if you're seeing this after that retry, it's most likely the project's OAuth consent screen still being in \"Testing\" mode in Google Cloud Console (APIs & Services → OAuth consent screen), which blocks any Google account not added as a test user. Third-party cookies/storage blocked for accounts.google.com can also cause it.";
+  } else if (err && err.code === "auth/unauthorized-domain") {
+    message = "This domain isn't in the Firebase project's authorized domains list — add it under Authentication → Settings → Authorized domains.";
   } else {
     message = (err && err.message) || "Something went wrong talking to the backend. Please try again.";
   }
@@ -237,16 +241,31 @@ function initModal() {
 }
 
 /* ---------- Sign-in (real Google account via Firebase Auth) ---------- */
+// Some browsers (Edge/Chrome with strict tracking-prevention or third-party-cookie
+// settings, some corporate policies) block the cross-origin postMessage/iframe
+// handshake signInWithPopup needs with the authDomain, and fail with one of these
+// codes instead of anything popup-specific. A full-page redirect doesn't need that
+// handshake, so it still works there — getRedirectResult() in initCommunityConnect
+// picks up the result (or a real error) once the browser navigates back.
+const POPUP_FALLBACK_CODES = ["auth/internal-error", "auth/popup-blocked", "auth/web-storage-unsupported", "auth/operation-not-supported-in-this-environment"];
+
 async function signInWithGoogle() {
   const fx = window.__firebaseModular;
   const provider = new fx.GoogleAuthProvider();
-  return fx.signInWithPopup(connectState.auth, provider);
+  try {
+    return await fx.signInWithPopup(connectState.auth, provider);
+  } catch (err) {
+    if (err && POPUP_FALLBACK_CODES.includes(err.code)) {
+      return fx.signInWithRedirect(connectState.auth, provider);
+    }
+    throw err;
+  }
 }
 
 function requireSignIn(then) {
   if (connectState.currentUser) { then(); return; }
   signInWithGoogle().then(() => then()).catch((err) => {
-    if (err && err.code === "auth/popup-closed-by-user") return;
+    if (err && (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request")) return;
     showCommunityError(err, "Sign-in failed");
   });
 }
@@ -1158,5 +1177,12 @@ async function initCommunityConnect() {
     subscribeMyCommunities();
     resolvePendingInvite();
     renderInviteBanner();
+  });
+
+  // Completes a signInWithGoogle() that fell back to signInWithRedirect (see
+  // POPUP_FALLBACK_CODES above) after the browser navigates back. A no-op — resolves
+  // with null — on every normal page load that didn't just come back from that redirect.
+  window.__firebaseModular.getRedirectResult(connectState.auth).catch((err) => {
+    showCommunityError(err, "Sign-in failed");
   });
 }

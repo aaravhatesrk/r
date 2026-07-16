@@ -367,14 +367,14 @@
   // it shares one real app instance with Firestore. See js/community.js.
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-app.js";
   import {
-    getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged
+    getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
   import {
     initializeFirestore, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, collection, query, where,
     orderBy, limit, onSnapshot, runTransaction, serverTimestamp, arrayUnion, arrayRemove
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
   window.__firebaseModular = {
-    initializeApp, getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged,
+    initializeApp, getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged,
     initializeFirestore, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, collection, query, where,
     orderBy, limit, onSnapshot, runTransaction, serverTimestamp, arrayUnion, arrayRemove
   };
