@@ -12,7 +12,7 @@
    key lives only in the backend's environment variables. */
 const BACKEND_URL = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
   ? "http://localhost:3001"
-  : "https://pitchiq-backend.onrender.com";
+  : "https://rooted-pitchiq-backend.onrender.com";
 
 const SKILL_CATEGORIES = [
   { id: "first-touch", name: "First Touch & Ball Control", icon: "\u{1F3D0}", color: "#2a78d6", colorDark: "#3987e5" },

@@ -9,7 +9,7 @@
    environment variables. */
 const BACKEND_URL = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
   ? "http://localhost:3001"
-  : "https://pitchiq-backend.onrender.com";
+  : "https://rooted-pitchiq-backend.onrender.com";
 
 const COUNTRIES = [
   {
