@@ -198,6 +198,19 @@ function computeAndRenderSq() {
       <h4>Recommended cultural practice — ${country.name}</h4>
       <p style="margin:0">${practice}</p>
     </div>
+
+    <div class="sq-waitlist-prompt">
+      <h4>Want your score tracked over time?</h4>
+      <p>Join the waitlist — we'll email you when score history and trends launch.</p>
+      <form class="waitlist-form">
+        <label for="sq-wl-email" class="sr-only">Email address</label>
+        <div class="waitlist-row">
+          <input id="sq-wl-email" type="email" name="email" required autocomplete="email" placeholder="you@example.com" />
+          <button type="submit" class="btn btn-primary btn-small">Join the waitlist</button>
+        </div>
+        <p class="waitlist-status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
   `;
 }
 
@@ -432,6 +445,47 @@ function initTableToggles() {
   });
 }
 
+/* ---------- Waitlist ----------
+   Every .waitlist-form on the site (hero, footer, post-SQ-score) submits here. */
+const WAITLIST_ENDPOINT = "https://formspree.io/f/mrenejqe";
+
+function initWaitlistForms() {
+  document.addEventListener("submit", async (e) => {
+    const form = e.target.closest(".waitlist-form");
+    if (!form) return;
+    e.preventDefault();
+
+    const status = form.querySelector(".waitlist-status");
+    const btn = form.querySelector("button[type=submit]");
+
+    if (WAITLIST_ENDPOINT.includes("YOUR_FORM_ID")) {
+      status.textContent = "Waitlist form isn't connected yet.";
+      status.className = "waitlist-status waitlist-error";
+      return;
+    }
+
+    btn.disabled = true;
+    status.textContent = "";
+    status.className = "waitlist-status";
+    try {
+      const resp = await fetch(WAITLIST_ENDPOINT, {
+        method: "POST",
+        headers: { "Accept": "application/json" },
+        body: new FormData(form)
+      });
+      if (!resp.ok) throw new Error("Request failed");
+      form.reset();
+      status.textContent = "You're on the list — we'll email you when it's ready.";
+      status.className = "waitlist-status waitlist-success";
+    } catch {
+      status.textContent = "Something went wrong — please try again in a moment.";
+      status.className = "waitlist-status waitlist-error";
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
 /* ---------- Team ---------- */
 function renderTeam() {
   const el = document.getElementById("team-grid");
@@ -459,4 +513,5 @@ document.addEventListener("DOMContentLoaded", () => {
   renderStatTiles();
   initTableToggles();
   renderTeam();
+  initWaitlistForms();
 });

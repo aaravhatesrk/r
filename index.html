@@ -5,9 +5,33 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Rooted — Cultural Roots, Global Wellness</title>
 <meta name="description" content="A culturally-adaptive eco-fitness platform with a Sustainability Quotient engine, a health-concern wellness advisor, and an in-house cultural practice library across India, Mexico, Japan and Costa Rica." />
+<link rel="canonical" href="https://rooted-i4d3.onrender.com/" />
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+
+<!-- Social sharing -->
+<meta property="og:type" content="website" />
+<meta property="og:title" content="Rooted — Cultural Roots, Global Wellness" />
+<meta property="og:description" content="Match your workouts to your region's own wellness traditions — Ayurveda, temazcal, shinrin-yoku, Pura Vida — and get a transparent sustainability score." />
+<meta property="og:url" content="https://rooted-i4d3.onrender.com/" />
+<meta property="og:image" content="https://rooted-i4d3.onrender.com/assets/og-image.png" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<!-- Structured data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "name": "Rooted",
+  "url": "https://rooted-i4d3.onrender.com/",
+  "description": "A culturally-adaptive eco-fitness platform with a Sustainability Quotient engine and cultural practice library."
+}
+</script>
+
 <link rel="stylesheet" href="css/styles.css" />
 </head>
 <body>
+
+<a href="#main" class="skip-link">Skip to content</a>
 
 <header class="topbar">
   <div class="brand">
@@ -46,7 +70,7 @@
   </button>
 </header>
 
-<main>
+<main id="main">
 
   <!-- HOME -->
   <section id="tab-home" class="tab-panel active">
@@ -68,9 +92,19 @@
       <div class="hero-ctas">
         <button class="btn btn-primary" data-goto="prototype">Try the SQ Prototype</button>
         <button class="btn btn-ghost" data-goto="advisor">Ask the Wellness Advisor</button>
-        <a class="btn btn-ghost" href="performance-analyzer/index.html" target="_blank" rel="noopener">Open Athlyze — Performance Analyzer ↗</a>
-        <a class="btn btn-ghost" href="football-analyzer/index.html" target="_blank" rel="noopener">Open PitchIQ — Football Analyzer ↗</a>
+        <a class="btn btn-ghost" href="performance-analyzer/" target="_blank" rel="noopener">Open Athlyze — Performance Analyzer ↗</a>
+        <a class="btn btn-ghost" href="football-analyzer/" target="_blank" rel="noopener">Open PitchIQ — Football Analyzer ↗</a>
       </div>
+
+      <form class="waitlist-form waitlist-inline" aria-label="Join the waitlist">
+        <label for="hero-wl-email">Get early access</label>
+        <div class="waitlist-row">
+          <input id="hero-wl-email" type="email" name="email" required autocomplete="email" placeholder="you@example.com" />
+          <button type="submit" class="btn btn-primary btn-small">Join the waitlist</button>
+        </div>
+        <p class="waitlist-status" role="status" aria-live="polite"></p>
+        <p class="waitlist-hint">No spam — one email when we launch. <a href="privacy.html">Privacy</a></p>
+      </form>
     </div>
 
     <div class="sister-app-banner">
@@ -79,7 +113,7 @@
         <p>A standalone sports-performance analytics app — log workouts across any sport, track personal
         bests, and see progress trends over time. Separate site, no account needed, opens in a new tab.</p>
       </div>
-      <a class="btn btn-primary btn-small" href="performance-analyzer/index.html" target="_blank" rel="noopener">Launch Athlyze ↗</a>
+      <a class="btn btn-primary btn-small" href="performance-analyzer/" target="_blank" rel="noopener">Launch Athlyze ↗</a>
     </div>
 
     <div class="sister-app-banner">
@@ -90,30 +124,30 @@
         mistake it recognizes, why it happens, and a drill to fix it. Separate site, no account needed, opens
         in a new tab.</p>
       </div>
-      <a class="btn btn-primary btn-small" href="football-analyzer/index.html" target="_blank" rel="noopener">Launch PitchIQ ↗</a>
+      <a class="btn btn-primary btn-small" href="football-analyzer/" target="_blank" rel="noopener">Launch PitchIQ ↗</a>
     </div>
 
     <div class="country-strip" id="country-strip"></div>
 
     <div class="pillars">
       <div class="pillar-card">
-        <h3>Cultural Wellness Engine</h3>
+        <h2>Cultural Wellness Engine</h2>
         <p>Matches every workout to a local practice — Ayurvedic recovery in India, temazcal-inspired
         breathwork in Mexico, shinrin-yoku forest walks in Japan, Pura Vida gratitude rituals in Costa Rica.</p>
       </div>
       <div class="pillar-card">
-        <h3>Sustainability Quotient</h3>
+        <h2>Sustainability Quotient</h2>
         <p>A transparent, weighted score (0–100) built from gear choice, travel mode, and post-workout
         resource use — not a black box, a formula anyone can audit line by line.</p>
       </div>
       <div class="pillar-card">
-        <h3>Wellness Advisor</h3>
+        <h2>Wellness Advisor</h2>
         <p>Describe an everyday health concern — stress, poor sleep, low energy, aches — and get a
         culturally-rooted practice to try from each region, plus clear guidance on when to see a
         real professional instead.</p>
       </div>
       <div class="pillar-card">
-        <h3>Community Wellness Hub</h3>
+        <h2>Community Wellness Hub</h2>
         <p>An in-house Cultural Practice Library plus Community Connect — create or join a group with
         people training toward the same practice, city or goal. No outside organizations involved;
         everything here is Rooted's own content and your own community.</p>
@@ -123,7 +157,7 @@
 
   <!-- PROTOTYPE -->
   <section id="tab-prototype" class="tab-panel">
-    <h1>Sustainability Quotient Prototype</h1>
+    <h2 class="section-title">Sustainability Quotient Prototype</h2>
     <p class="section-note">
       Select a country and describe one workout. The engine computes an SQ score from four weighted
       inputs, assigns a tier, and recommends a local cultural wellness practice to pair with it.
@@ -172,7 +206,7 @@
 
   <!-- WELLNESS ADVISOR -->
   <section id="tab-advisor" class="tab-panel">
-    <h1>Wellness Advisor</h1>
+    <h2 class="section-title">Wellness Advisor</h2>
     <p class="section-note">
       Describe an everyday health concern in your own words. The advisor matches it against a small
       knowledge base of common, non-emergency wellness concerns and suggests a culturally-rooted
@@ -205,12 +239,12 @@
 
   <!-- COMMUNITY -->
   <section id="tab-community" class="tab-panel">
-    <h1>Community Wellness Hub</h1>
+    <h2 class="section-title">Community Wellness Hub</h2>
 
     <section class="connect-block">
       <div class="connect-head">
         <div>
-          <h2>Connect With People In Your Community</h2>
+          <h3>Connect With People In Your Community</h3>
           <p class="section-note">
             Sign in with your real Google account, start a community around a practice, city or goal,
             then invite others with a shareable link or a short code. Communities are stored in a real,
@@ -239,7 +273,7 @@
       <div class="grid community-connect-grid" id="my-communities-list"></div>
     </section>
 
-    <h2 class="practice-heading">Cultural Practice Library</h2>
+    <h3 class="practice-heading">Cultural Practice Library</h3>
     <p class="section-note">
       A self-guided library of cultural wellness practices per region, researched and written in-house
       by the Rooted team — not run by, or affiliated with, any outside organization. Rooted has no
@@ -252,14 +286,17 @@
 
   <!-- DASHBOARD -->
   <section id="tab-dashboard" class="tab-panel">
-    <h1>Impact Dashboard</h1>
-    <p class="section-note">Illustrative six-month pilot data used to demonstrate the analytics layer of the product.</p>
+    <span class="audience-tag">For partners &amp; investors</span>
+    <h2 class="section-title">Impact Dashboard</h2>
+    <p class="section-note">Projected impact — pilot data coming 2026. These figures demonstrate the
+    analytics layer we'll populate with real usage once the Community Hub is live; they are not
+    measurements of current activity.</p>
 
     <div class="stat-tiles" id="stat-tiles"></div>
 
     <div class="chart-card">
       <div class="chart-card-head">
-        <h2>Estimated CO₂ Saved by Country (kg, per month)</h2>
+        <h3>Estimated CO₂ Saved by Country (kg, per month) — projected</h3>
         <button class="btn btn-ghost btn-small" data-table-toggle="co2">View as table</button>
       </div>
       <div class="chart-legend" id="co2-legend"></div>
@@ -269,7 +306,7 @@
 
     <div class="chart-card">
       <div class="chart-card-head">
-        <h2>Relative Market Opportunity Index (0–100, illustrative)</h2>
+        <h3>Relative Market Opportunity Index (0–100) — projected</h3>
         <button class="btn btn-ghost btn-small" data-table-toggle="opportunity">View as table</button>
       </div>
       <div class="chart-legend" id="opportunity-legend"></div>
@@ -280,18 +317,56 @@
 
   <!-- TEAM -->
   <section id="tab-team" class="tab-panel">
-    <h1>Team &amp; Roles</h1>
+    <span class="audience-tag">For partners &amp; investors</span>
+    <h2 class="section-title">Team &amp; Roles</h2>
     <p class="section-note">The people behind Rooted, and the role each led.</p>
     <div class="grid team-grid" id="team-grid"></div>
   </section>
 
 </main>
 
-<footer class="site-footer">
-  <p>Rooted — the SQ Prototype and Wellness Advisor are transparent,
-  rule-based tools, not AI or medical advice. Also see <a href="performance-analyzer/index.html" target="_blank" rel="noopener">Athlyze</a>,
-  a standalone sports-performance analyzer, and <a href="football-analyzer/index.html" target="_blank" rel="noopener">PitchIQ</a>,
-  a standalone football skill &amp; match analyzer, both built alongside this project.</p>
+<footer class="site-footer site-footer-full">
+  <div class="footer-grid">
+    <div class="footer-about">
+      <strong>Rooted</strong>
+      <p>Wellness has roots. Fitness should honor them. The SQ Prototype and Wellness Advisor
+      are transparent, rule-based tools — not AI, and not medical advice.</p>
+    </div>
+    <nav class="footer-nav" aria-label="Footer">
+      <button type="button" class="footer-link" data-goto="prototype">SQ Prototype</button>
+      <button type="button" class="footer-link" data-goto="advisor">Wellness Advisor</button>
+      <button type="button" class="footer-link" data-goto="community">Community Hub</button>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="terms.html">Terms of Use</a>
+    </nav>
+    <div class="footer-labs">
+      <strong>Rooted Labs</strong>
+      <p>Standalone experiments from our team, not part of the core product.</p>
+      <a href="performance-analyzer/" target="_blank" rel="noopener">Athlyze — performance analyzer ↗</a>
+      <a href="football-analyzer/" target="_blank" rel="noopener">PitchIQ — football analyzer ↗</a>
+    </div>
+    <div class="footer-contact">
+      <strong>Contact</strong>
+      <a href="mailto:ghidorah967@gmail.com">ghidorah967@gmail.com</a>
+      <p class="footer-hint">Want your Community Hub data deleted? Email us with the subject
+      "Delete my data" and we'll confirm once it's done.</p>
+    </div>
+    <div class="footer-waitlist">
+      <strong>Get early access</strong>
+      <form class="waitlist-form">
+        <label for="footer-wl-email" class="sr-only">Email address</label>
+        <div class="waitlist-row">
+          <input id="footer-wl-email" type="email" name="email" required autocomplete="email" placeholder="you@example.com" />
+          <button type="submit" class="btn btn-primary btn-small">Join</button>
+        </div>
+        <p class="waitlist-status" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </div>
+  <p class="footer-legal">
+    © 2026 Rooted. The Wellness Advisor offers general suggestions only and is not medical
+    advice. Dashboard figures are projected pilot estimates, not measured data.
+  </p>
 </footer>
 
 <div id="modal-overlay" class="modal-overlay" hidden>

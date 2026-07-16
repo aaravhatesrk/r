@@ -421,7 +421,9 @@ function renderInviteBanner() {
     el.hidden = false;
     el.innerHTML = `
       <div><strong>You've been invited to join a community.</strong>
-      <p class="invite-desc">Sign in with your Google account to see who's in it and join.</p></div>
+      <p class="invite-desc">Sign in with your Google account to see who's in it and join. By
+      continuing you agree to our <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>
+      and <a href="terms.html" target="_blank" rel="noopener">Terms</a>.</p></div>
       <div class="invite-banner-actions"><button class="btn btn-primary btn-small" id="invite-signin-btn">Sign in with Google</button></div>`;
     el.querySelector("#invite-signin-btn").addEventListener("click", () => requireSignIn(() => {}));
     return;
@@ -693,7 +695,11 @@ function renderAuthArea() {
   const el = document.getElementById("auth-area");
   const user = connectState.currentUser;
   if (!user) {
-    el.innerHTML = `<button class="btn btn-primary" id="signin-btn">Continue with Google</button>`;
+    el.innerHTML = `
+      <button class="btn btn-primary" id="signin-btn">Continue with Google</button>
+      <p class="auth-consent-note">By continuing you agree to our
+      <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a> and
+      <a href="terms.html" target="_blank" rel="noopener">Terms</a>.</p>`;
     el.querySelector("#signin-btn").addEventListener("click", () => requireSignIn(() => {}));
     return;
   }
