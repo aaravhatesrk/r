@@ -2,7 +2,10 @@
 # Its allowances (gstatic, googleapis, accounts.google.com) come from the Community
 # Hub's Firebase sign-in on the main site — verify at securityheaders.com and by
 # actually signing in after deploy; if anything breaks, check DevTools > Console for
-# the blocked origin and add it to the relevant directive below.
+# the blocked origin and add it to the relevant directive below. connect-src also
+# allows pitchiq-backend.onrender.com — the Coach AI / Wellness Advisor / live
+# match lookup proxy (see /backend) — since both the main site and
+# /football-analyzer/ call it directly from client-side fetch().
 services:
   - type: web
     name: rooted
@@ -25,7 +28,7 @@ services:
         value: camera=(), microphone=(), geolocation=()
       - path: /*
         name: Content-Security-Policy
-        value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.googleusercontent.com; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://firebaseinstallations.googleapis.com; frame-src https://accounts.google.com https://ycfhj-b7095.firebaseapp.com; object-src 'none'; base-uri 'self'"
+        value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.googleusercontent.com; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://firebaseinstallations.googleapis.com https://pitchiq-backend.onrender.com; frame-src https://accounts.google.com https://ycfhj-b7095.firebaseapp.com; object-src 'none'; base-uri 'self'"
 
   - type: web
     name: athlyze
@@ -49,3 +52,24 @@ services:
       - path: /*
         name: Content-Security-Policy
         value: "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'"
+
+  # Backend proxy for Coach AI / Wellness Advisor (Gemini) and live match
+  # lookup (football-data.org) — see /backend. Holds GEMINI_API_KEY and
+  # FOOTBALL_DATA_API_KEY as real secrets set in the Render dashboard
+  # (Environment tab), never committed here. Render's free web-service tier
+  # sleeps after 15 minutes idle; the frontend accounts for this with a
+  # generous timeout and a rule-based/curated fallback on every call.
+  - type: web
+    name: pitchiq-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    pullRequestPreviewsEnabled: false
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: FOOTBALL_DATA_API_KEY
+        sync: false
+      - key: ALLOWED_ORIGIN
+        value: https://rooted-i4d3.onrender.com

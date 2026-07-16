@@ -98,6 +98,8 @@
 
       <form class="waitlist-form waitlist-inline" aria-label="Join the waitlist">
         <label for="hero-wl-email">Get early access</label>
+        <p class="waitlist-hint">Early access members get first access to new features as they launch —
+        starting with SQ score history/trends and new countries — before they're open to everyone else.</p>
         <div class="waitlist-row">
           <input id="hero-wl-email" type="email" name="email" required autocomplete="email" placeholder="you@example.com" />
           <button type="submit" class="btn btn-primary btn-small">Join the waitlist</button>
@@ -208,9 +210,11 @@
   <section id="tab-advisor" class="tab-panel">
     <h2 class="section-title">Wellness Advisor</h2>
     <p class="section-note">
-      Describe an everyday health concern in your own words. The advisor matches it against a small
-      knowledge base of common, non-emergency wellness concerns and suggests a culturally-rooted
-      practice from each region worth trying.
+      Describe an everyday health concern in your own words and get AI-generated wellness suggestions,
+      including a culturally-rooted practice from your region worth trying. Any description that looks
+      like a medical emergency is always caught instantly by a built-in safety check, before anything is
+      sent to the AI — and if the AI is ever slow to respond, this falls back to a small built-in
+      knowledge base of common, non-emergency wellness concerns.
     </p>
     <div class="disclaimer-banner">
       <strong>Not medical advice.</strong> This tool offers general wellness suggestions only — it
@@ -329,8 +333,8 @@
   <div class="footer-grid">
     <div class="footer-about">
       <strong>Rooted</strong>
-      <p>Wellness has roots. Fitness should honor them. The SQ Prototype and Wellness Advisor
-      are transparent, rule-based tools — not AI, and not medical advice.</p>
+      <p>Wellness has roots. Fitness should honor them. The SQ Prototype is a transparent,
+      rule-based tool; the Wellness Advisor is AI-powered with a rule-based fallback. Neither is medical advice.</p>
     </div>
     <nav class="footer-nav" aria-label="Footer">
       <button type="button" class="footer-link" data-goto="prototype">SQ Prototype</button>
@@ -350,17 +354,6 @@
       <a href="mailto:ghidorah967@gmail.com">ghidorah967@gmail.com</a>
       <p class="footer-hint">Want your Community Hub data deleted? Email us with the subject
       "Delete my data" and we'll confirm once it's done.</p>
-    </div>
-    <div class="footer-waitlist">
-      <strong>Get early access</strong>
-      <form class="waitlist-form">
-        <label for="footer-wl-email" class="sr-only">Email address</label>
-        <div class="waitlist-row">
-          <input id="footer-wl-email" type="email" name="email" required autocomplete="email" placeholder="you@example.com" />
-          <button type="submit" class="btn btn-primary btn-small">Join</button>
-        </div>
-        <p class="waitlist-status" role="status" aria-live="polite"></p>
-      </form>
     </div>
   </div>
   <p class="footer-legal">

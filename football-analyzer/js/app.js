@@ -561,25 +561,72 @@ function loadFamousMatch(matchId) {
   el.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
-function computeAndRenderMatchAnalysis() {
+/* Lightweight card for a match found via live lookup rather than the curated
+   FAMOUS_MATCHES library — no key moments/talking points/clips exist for
+   these, only what the sports-data API itself reports. */
+function renderLiveMatchCard(match) {
+  return `
+    <div class="match-card">
+      <div class="match-score-banner">
+        <div class="match-competition-row">
+          <span class="match-competition">${match.competition} · Live result</span>
+        </div>
+        <h3>${match.teams[0]} <span class="match-vs">vs</span> ${match.teams[1]}</h3>
+        <div class="match-score">${match.score}</div>
+        <div class="match-meta">${match.date}</div>
+      </div>
+      <p class="sq-placeholder">Looked up live — not part of the curated match library yet, so there are no tagged
+      key moments, clips or Coach talking points for this one.</p>
+    </div>`;
+}
+
+/* football-data.org's free tier only covers recent/current fixtures, so this
+   is purely a fallback when the curated library has no match — it never
+   runs if findFamousMatches() already found something. Generous timeout
+   because Render's free tier puts an idle backend to sleep (30-60s to wake
+   back up); on any failure/timeout this just returns null and the caller
+   shows the existing "couldn't find that" placeholder. */
+async function fetchLiveMatch(query) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+  try {
+    const resp = await fetch(`${BACKEND_URL}/api/match-lookup?q=${encodeURIComponent(query)}`, { signal: controller.signal });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return data.match || null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function computeAndRenderMatchAnalysis() {
   const raw = document.getElementById("match-analyzer-input").value;
   const el = document.getElementById("match-analyzer-result");
   const results = findFamousMatches(raw);
 
-  if (results.length === 0) {
-    el.innerHTML = `
-      <p class="sq-placeholder">Couldn't find that in the match library yet. Try a team name and a year (e.g. "Argentina vs France 2022"),
-      or browse the full library below.</p>`;
+  if (results.length > 0) {
+    const [top, ...rest] = results;
+    const closeAlternatives = rest.filter(m => m.id !== top.id).slice(0, 3);
+    el.innerHTML = renderMatchCard(top) + (closeAlternatives.length ? renderMatchSuggestions(closeAlternatives) : "");
+    wireMatchCardInteractions(el);
+    el.querySelectorAll("[data-load-match]").forEach(btn => {
+      btn.addEventListener("click", () => loadFamousMatch(btn.dataset.loadMatch));
+    });
     return;
   }
 
-  const [top, ...rest] = results;
-  const closeAlternatives = rest.filter(m => m.id !== top.id).slice(0, 3);
-  el.innerHTML = renderMatchCard(top) + (closeAlternatives.length ? renderMatchSuggestions(closeAlternatives) : "");
-  wireMatchCardInteractions(el);
-  el.querySelectorAll("[data-load-match]").forEach(btn => {
-    btn.addEventListener("click", () => loadFamousMatch(btn.dataset.loadMatch));
-  });
+  el.innerHTML = `<p class="sq-placeholder">Checking for a live result…</p>`;
+  const liveMatch = await fetchLiveMatch(raw);
+  if (liveMatch) {
+    el.innerHTML = renderLiveMatchCard(liveMatch);
+    return;
+  }
+
+  el.innerHTML = `
+    <p class="sq-placeholder">Couldn't find that in the match library or in recent results. Try a team name and a year
+    (e.g. "Argentina vs France 2022"), or browse the full library below.</p>`;
 }
 
 function initMatchAnalyzer() {

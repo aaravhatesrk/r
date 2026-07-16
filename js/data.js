@@ -1,6 +1,15 @@
 /* Rooted — data layer.
    Country reference data, the SQ (Sustainability Quotient) scoring model, and the
-   Wellness Advisor's knowledge base. */
+   Wellness Advisor's knowledge base — the last of these also serves as the
+   rule-based fallback the Wellness Advisor uses if the backend (real LLM) is
+   unreachable, asleep, or over quota. */
+
+/* Backend that proxies Gemini for the Wellness Advisor — see /backend. Never
+   called with an API key in this file; the key lives only in the backend's
+   environment variables. */
+const BACKEND_URL = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+  ? "http://localhost:3001"
+  : "https://pitchiq-backend.onrender.com";
 
 const COUNTRIES = [
   {
@@ -585,5 +594,6 @@ const TEAM_ROLES = [
   { role: "Sustainability Lead", scope: "SQ formula design & sustainability impact metrics", name: "Aarav Kapoor" },
   { role: "Wellness Content Lead", scope: "Cultural Practice Library & Wellness Advisor knowledge base", name: "Akul Sood" },
   { role: "Prototype / Tech Lead", scope: "This web app — build & backend setup", name: "Aarav Kapoor" },
-  { role: "Community & Partnerships Lead", scope: "Community Connect & future country-by-country rollout", name: "Neiv Malhotra" }
+  { role: "Community & Partnerships Lead", scope: "Community Connect & future country-by-country rollout", name: "Neiv Malhotra" },
+  { role: "Finance Lead", scope: "Budgeting & financial planning", name: "Akul Sood" }
 ];

@@ -198,19 +198,6 @@ function computeAndRenderSq() {
       <h4>Recommended cultural practice — ${country.name}</h4>
       <p style="margin:0">${practice}</p>
     </div>
-
-    <div class="sq-waitlist-prompt">
-      <h4>Want your score tracked over time?</h4>
-      <p>Join the waitlist — we'll email you when score history and trends launch.</p>
-      <form class="waitlist-form">
-        <label for="sq-wl-email" class="sr-only">Email address</label>
-        <div class="waitlist-row">
-          <input id="sq-wl-email" type="email" name="email" required autocomplete="email" placeholder="you@example.com" />
-          <button type="submit" class="btn btn-primary btn-small">Join the waitlist</button>
-        </div>
-        <p class="waitlist-status" role="status" aria-live="polite"></p>
-      </form>
-    </div>
   `;
 }
 
@@ -249,11 +236,83 @@ function detectIntensity(raw) {
   return { level: "Elevated", hits, note: "The language here suggests this has been persistent or intense — the action plan below leans toward starting today, and the 'when to seek help' guidance is worth reading." };
 }
 
-function computeAndRenderAdvice() {
-  const raw = document.getElementById("advisor-input").value.toLowerCase();
+/* Escapes AI-generated text before it's dropped into innerHTML — the model's
+   output is never trusted as HTML, closing off prompt-injection-driven XSS
+   (e.g. a description crafted to make the model emit a <script> tag). */
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function aiAdviceHtml(data, description) {
+  const raw = description.toLowerCase();
+  const intensity = detectIntensity(raw);
+  const intensityClass = intensity.level === "Elevated" ? "kpi-bad" : intensity.level === "Moderate" ? "kpi-warn" : "kpi-good";
+  return `
+    <div class="disclaimer-banner">
+      <strong>Not medical advice.</strong> General wellness suggestions only — see a professional for persistent or severe symptoms.
+    </div>
+    <div class="advisor-analysis">
+      <div class="advisor-intensity">
+        <span class="kpi-pill ${intensityClass}">${intensity.level}</span>
+        <span class="advisor-intensity-note">${intensity.note}</span>
+      </div>
+    </div>
+    <div class="advisor-match advisor-match-primary">
+      <h3>Wellness Advisor (AI)</h3>
+      <p class="advisor-general">${escapeHtml(data.generalAdvice || "")}</p>
+      <div class="advisor-action-plan">
+        <div><span class="ap-lbl">Try today</span>${escapeHtml(data.actionPlan?.today || "")}</div>
+        <div><span class="ap-lbl">This week</span>${escapeHtml(data.actionPlan?.thisWeek || "")}</div>
+        <div><span class="ap-lbl">When to seek help</span>${escapeHtml(data.actionPlan?.whenToSeekHelp || "")}</div>
+      </div>
+      ${data.culturalPractice ? `<p style="margin-top:10px">${escapeHtml(data.culturalPractice)}</p>` : ""}
+    </div>`;
+}
+
+/* Backend calls get a generous timeout because Render's free tier puts an
+   idle service to sleep — the first request after a while can take 30-60s
+   to wake it back up. If it doesn't answer in time, times out, errors, or
+   flags a red-flag description that somehow slipped past the client-side
+   check, this returns null and the caller falls back to the instant
+   rule-based HEALTH_CONCERNS matching below. */
+async function fetchAiAdvice(description, country) {
+  const c = countryById[country] || null;
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 20000);
+  try {
+    const resp = await fetch(`${BACKEND_URL}/api/wellness`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        description,
+        country,
+        countryLabel: c ? c.name : "the user's region",
+        heritage: c ? c.heritage : null,
+      }),
+      signal: controller.signal,
+    });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    if (data.redFlag) return { redFlag: true };
+    if (!data.generalAdvice) return null;
+    return data;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+async function computeAndRenderAdvice() {
+  const description = document.getElementById("advisor-input").value;
+  const raw = description.toLowerCase();
   const focusCountry = document.getElementById("advisor-country").value;
   const el = document.getElementById("advisor-result");
 
+  // Deterministic, synchronous, client-side — never depends on the network
+  // or the LLM being reachable/well-behaved. This must always run first.
   const hasRedFlag = HEALTH_RED_FLAGS.some(flag => raw.includes(flag));
   if (hasRedFlag) {
     el.innerHTML = `
@@ -265,6 +324,23 @@ function computeAndRenderAdvice() {
     return;
   }
 
+  el.innerHTML = `<p class="sq-placeholder">Thinking… (waking up the AI can take up to a minute if it's been idle)</p>`;
+  const aiResult = await fetchAiAdvice(description, focusCountry);
+  if (aiResult && aiResult.redFlag) {
+    el.innerHTML = `
+      <div class="disclaimer-banner urgent">
+        <strong>This may need urgent, real-world help.</strong> If this is a medical emergency,
+        contact local emergency services or a crisis helpline right now. This app is a wellness
+        prototype and cannot provide emergency or clinical care.
+      </div>`;
+    return;
+  }
+  if (aiResult) {
+    el.innerHTML = aiAdviceHtml(aiResult, description);
+    return;
+  }
+  const fallbackNote = `<p class="sq-placeholder" style="margin-bottom:8px">(AI advisor wasn't reachable just now — showing the built-in advisor instead.)</p>`;
+
   const scored = HEALTH_CONCERNS.map(concern => {
     const matchedKeywords = concern.keywords.filter(k => raw.includes(k));
     return { concern, hits: matchedKeywords.length, matchedKeywords };
@@ -274,6 +350,7 @@ function computeAndRenderAdvice() {
 
   if (scored.length === 0) {
     el.innerHTML = `
+      ${fallbackNote}
       <div class="disclaimer-banner">
         <strong>Not medical advice.</strong> General wellness suggestions only — see a professional for persistent or severe symptoms.
       </div>
@@ -320,6 +397,7 @@ function computeAndRenderAdvice() {
   }
 
   el.innerHTML = `
+    ${fallbackNote}
     <div class="disclaimer-banner">
       <strong>Not medical advice.</strong> General wellness suggestions only — see a professional for persistent or severe symptoms.
     </div>
