@@ -25,7 +25,7 @@ services:
         value: camera=(), microphone=(), geolocation=()
       - path: /*
         name: Content-Security-Policy
-        value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.googleusercontent.com; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://firebaseinstallations.googleapis.com; frame-src https://accounts.google.com https://ycfhj-b7095.firebaseapp.com; object-src 'none'; base-uri 'self'"
+        value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.googleusercontent.com; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://firebaseinstallations.googleapis.com; frame-src https://accounts.google.com https://sacdavs.firebaseapp.com; object-src 'none'; base-uri 'self'"
 
   - type: web
     name: athlyze
