@@ -1,7 +1,7 @@
 /* Athlyze — small dependency-free canvas chart layer.
-   Shared engine with the Rooted site (grouped bars, horizontal bars, hover
+   Shared engine with the Praxis site (grouped bars, horizontal bars, hover
    tooltips, table-view fallback) plus a line/trend chart for progress over
-   time, which Rooted doesn't need. */
+   time, which Praxis doesn't need. */
 
 const CHART_TOOLTIP = (() => {
   const el = document.createElement("div");

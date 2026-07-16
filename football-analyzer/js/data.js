@@ -1,18 +1,11 @@
 /* PitchIQ — data layer: skill categories and a knowledge base of common
    mistakes, each with a plain-language "why", a correction cue, and a
-   practice drill. This published, auditable knowledge base is the rule-based
-   fallback Coach AI and the Quick Analyzer use whenever the backend (real
-   LLM + live match lookup) is unreachable, asleep, or over quota — so the
-   tool never dead-ends even without a network. Colors reuse the eight
+   practice drill. This is the same rule-based approach as Praxis's
+   Wellness Advisor (js/data.js in the main site) — a published, auditable
+   knowledge base that keyword-matches free text or gets picked from a
+   dropdown, not a machine-learning model. Colors reuse the eight
    validated categorical slots from the shared design-system palette so
    this tool's charts stay consistent with Athlyze's. */
-
-/* Backend that proxies Gemini (Coach AI) and football-data.org (live match
-   lookup) — see /backend. Never called with an API key in this file; the
-   key lives only in the backend's environment variables. */
-const BACKEND_URL = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
-  ? "http://localhost:3001"
-  : "https://rooted-pitchiq-backend.onrender.com";
 
 const SKILL_CATEGORIES = [
   { id: "first-touch", name: "First Touch & Ball Control", icon: "\u{1F3D0}", color: "#2a78d6", colorDark: "#3987e5" },
@@ -445,14 +438,10 @@ const THEME_KEY = "pitchiq-theme";
 /* ---------- Famous Match Library ----------
    A small, hand-curated set of historically notable matches spanning
    different eras and competitions — World Cup and continental finals,
-   Champions League finals, and famous league/title-race games — checked
-   first and always instantly, no network required. It's a fixed, auditable
-   library, same idea as the Skill Library above, with the full narrative
-   detail (key moments, clips, talking points) that only hand-curation can
-   give. A query that doesn't match anything here falls back to a live
-   lookup against the backend (see computeAndRenderMatchAnalysis in app.js)
-   for recent/current matches — those come back as a bare score/date/venue,
-   with none of this library's curated detail. Typing something
+   Champions League finals, and famous league/title-race games. This is NOT
+   a live "look up any match" feed (PitchIQ has no game-data API or backend,
+   same static/offline philosophy as everything else here) — it's a fixed,
+   auditable library, same idea as the Skill Library above. Typing something
    like "Argentina vs France 2022" fuzzy-matches against team names, the
    year and a few aliases per match; browse the full list below the search
    box if you'd rather pick one directly. */

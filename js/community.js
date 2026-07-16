@@ -1,4 +1,4 @@
-/* Rooted — Community Connect, backed by a real Firebase project.
+/* Praxis — Community Connect, backed by a real Firebase project.
 
    Accounts are real Google sign-ins (Firebase Authentication) and every
    community lives in a shared Firestore database, not this browser's
@@ -26,7 +26,7 @@ const connectState = {
   notifLastSeen: {} // community code -> ms timestamp of the newest message already surfaced (persisted per account)
 };
 
-// Rooted's own physical-fitness tips & advancements — static, in-house content
+// Praxis's own physical-fitness tips & advancements — static, in-house content
 // (matches the rest of the site's "transparent, rule-based, no outside API" approach),
 // shown in every community room's "Fitness Tips" tab.
 const FITNESS_TIPS = [

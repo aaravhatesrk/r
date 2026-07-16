@@ -1,5 +1,5 @@
 /* PitchIQ — small dependency-free canvas chart layer (same engine as
-   Rooted/Athlyze). Only the horizontal bar chart is needed here, to show
+   Praxis/Athlyze). Only the horizontal bar chart is needed here, to show
    tagged-mistake counts per skill category across all saved sessions. */
 
 const CHART_TOOLTIP = (() => {

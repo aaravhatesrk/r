@@ -1,4 +1,4 @@
-/* Rooted — dependency-free .xlsx writer.
+/* Praxis — dependency-free .xlsx writer.
    Builds a minimal, spec-valid OOXML workbook (Content_Types, rels, workbook.xml,
    one sheetN.xml per sheet) and zips it with the STORE (uncompressed) method so
    the whole thing works with nothing but the browser's built-in APIs — no

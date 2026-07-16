@@ -1,4 +1,4 @@
-/* Rooted — small dependency-free canvas chart layer.
+/* Praxis — small dependency-free canvas chart layer.
    Grouped vertical bars + horizontal bars, with hover tooltips,
    direct value labels, and a table-view fallback for accessibility. */
 

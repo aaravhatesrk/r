@@ -17,7 +17,7 @@
       <span class="brand-tag">Football Skill &amp; Match Analyzer</span>
     </div>
   </div>
-  <a class="back-link" href="../index.html">&larr; Back to Rooted</a>
+  <a class="back-link" href="../index.html">&larr; Back to Praxis</a>
   <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode" title="Toggle dark mode">
     <span class="icon-sun">&#9728;</span><span class="icon-moon">&#9789;</span>
   </button>
@@ -40,8 +40,8 @@
     <strong>Honest about what this is.</strong> PitchIQ does not use computer vision to "watch" your video for
     you — that needs real video-analysis infrastructure this dependency-free, static tool doesn't have. Instead,
     it gives you a structured framework: play the clip yourself, tag what you see against a published mistake
-    library, and get instant, rule-based coaching feedback for each tag — transparent and auditable, not a
-    professional scouting service (Coach AI below is a separate, AI-powered feature). Your video file stays entirely on your device;
+    library, and get instant, rule-based coaching feedback for each tag — same transparent approach as Praxis's
+    Wellness Advisor, not AI or a professional scouting service. Your video file stays entirely on your device;
     it is never uploaded anywhere, and it isn't saved between visits — only the notes and timestamps you tag are.
   </div>
 
@@ -133,10 +133,9 @@
     <h2>Famous Match Analyzer</h2>
     <p class="section-note">Type a matchup — a team name and a year works best, e.g. "Argentina vs France 2022" or
       "Miracle of Istanbul" — and get a breakdown of key moments and coaching talking points from famous matches
-      old and new, across World Cups, continental finals, Champions League finals and famous league games. This
-      hand-curated library is checked first and always instantly; a recent or current match not in it falls back
-      to a live score/date/venue lookup instead (without the curated key moments and talking points) —
-      browse the full curated list below either way.</p>
+      old and new, across World Cups, continental finals, Champions League finals and famous league games. This is
+      a fixed, hand-curated library (same rule-based approach as the rest of PitchIQ, not a live results feed) —
+      browse the full list below if your match isn't recognized yet.</p>
 
     <form id="match-analyzer-form" class="analyzer-form">
       <label>
@@ -159,10 +158,10 @@
   <section class="plan-block coach-section" id="coach-section">
     <h2>Coach AI</h2>
     <p class="section-note">Ask Coach a question in your own words about technique, tactics, mentality, or
-      how to train something specific. Coach is powered by AI — if it's ever slow to wake up or unavailable,
-      it falls back to the same published knowledge base as the Quick Analyzer above, matching your wording
-      against a library of common mistakes so you always get an answer. It's also what answers when you tap
-      "Ask Coach about this" on a tagged moment, a Quick Analyzer result, or a famous match above.</p>
+      how to train something specific. It's rule-based, not a language model — same published knowledge base
+      as the Quick Analyzer above, no API key or backend required — so it answers by matching your wording
+      against a library of common mistakes. It's also what answers when you tap "Ask Coach about this" on a
+      tagged moment, a Quick Analyzer result, or a famous match above.</p>
 
     <div id="coach-context-chip" class="coach-context-chip" hidden>
       <span>Asking about: <strong id="coach-context-label"></strong></span>
@@ -219,7 +218,7 @@
 </main>
 
 <footer class="site-footer">
-  <p>PitchIQ — a standalone football skill &amp; match analyzer built alongside the <a href="../index.html">Rooted</a>
+  <p>PitchIQ — a standalone football skill &amp; match analyzer built alongside the <a href="../index.html">Praxis</a>
   business plan prototype. Rule-based knowledge base, not AI or computer vision — see the notice above. Video
   files are never uploaded or persisted; tagged notes are stored in this browser's <code>localStorage</code>
   only. Sample session data is pre-loaded on first visit and can be removed from Session History.</p>

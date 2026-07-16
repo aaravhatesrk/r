@@ -1,4 +1,4 @@
-/* Rooted — Firebase configuration.
+/* Praxis — Firebase configuration.
 
    Community Connect needs a real backend so that communities you create are
    visible to *anyone* who signs in with their own Google account, on any

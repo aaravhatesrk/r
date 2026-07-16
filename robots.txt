@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://rooted-i4d3.onrender.com/sitemap.xml
+Sitemap: https://praxis.onrender.com/sitemap.xml

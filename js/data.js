@@ -1,15 +1,6 @@
-/* Rooted — data layer.
+/* Praxis — data layer.
    Country reference data, the SQ (Sustainability Quotient) scoring model, and the
-   Wellness Advisor's knowledge base — the last of these also serves as the
-   rule-based fallback the Wellness Advisor uses if the backend (real LLM) is
-   unreachable, asleep, or over quota. */
-
-/* Backend that proxies Gemini for the Wellness Advisor — see /backend. Never
-   called with an API key in this file; the key lives only in the backend's
-   environment variables. */
-const BACKEND_URL = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
-  ? "http://localhost:3001"
-  : "https://rooted-pitchiq-backend.onrender.com";
+   Wellness Advisor's knowledge base. */
 
 const COUNTRIES = [
   {
@@ -558,8 +549,8 @@ const HEALTH_CONCERNS = [
 ];
 
 /* ---------- Community Hub: self-guided Cultural Practice Library ----------
-   Rooted has no existing partnership with any outside organization. This
-   in-house library — written and researched by the Rooted team, not run by
+   Praxis has no existing partnership with any outside organization. This
+   in-house library — written and researched by the Praxis team, not run by
    a partner — packages the practices already used by the SQ prototype and
    Wellness Advisor into a browsable per-country collection. See
    buildPracticeLibrary() in js/app.js, which derives it from

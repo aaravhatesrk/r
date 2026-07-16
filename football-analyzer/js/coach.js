@@ -1,13 +1,10 @@
-/* PitchIQ — Coach AI: answers via a real LLM (Gemini, proxied through
-   /backend so the API key never reaches this client-side file). If the
-   backend is unreachable, asleep (Render free-tier cold start) or over
-   quota, it falls back to matching your question's wording against the
-   published mistake knowledge base used by the Quick Analyzer (js/data.js)
-   — same transparent, auditable approach as the rest of PitchIQ, just
-   phrased as a conversation instead of a match/fix/drill grid. When you
-   arrive here via "Ask Coach about this" from a tagged mistake or a famous
-   match moment, Coach answers using that exact context even if your
-   question is generic. */
+/* PitchIQ — Coach AI: a rule-based coaching assistant, no API key or backend
+   required. It answers by matching your question's wording against the same
+   published mistake knowledge base as the Quick Analyzer (js/data.js) —
+   same transparent, auditable approach as the rest of PitchIQ, just phrased
+   as a conversation instead of a match/fix/drill grid. When you arrive here
+   via "Ask Coach about this" from a tagged mistake or a famous match moment,
+   Coach answers using that exact context even if your question is generic. */
 
 const coachState = {
   contextLabel: null,
@@ -197,56 +194,18 @@ function composeCoachAnswer(question) {
   return noMatchAnswerHtml();
 }
 
-function aiCoachAnswerHtml(answer) {
-  const div = document.createElement("div");
-  div.textContent = answer;
-  return `
-    <div class="coach-answer">
-      <div class="coach-answer-head"><span class="chip"><span class="chip-dot" style="background:var(--brand)"></span>&#9917; Coach (AI)</span></div>
-      <div class="analyzer-body"><div style="white-space:pre-wrap">${div.innerHTML}</div></div>
-    </div>`;
-}
-
-/* Backend calls get a generous timeout because Render's free tier puts an
-   idle service to sleep — the first request after a while can take 30-60s
-   to wake it back up. If it doesn't answer in time, times out, or errors,
-   Coach falls back to the instant rule-based composeCoachAnswer() below so
-   a slow/sleeping/over-quota backend never breaks the feature. */
-async function fetchAiCoachAnswer(question, contextText) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 20000);
-  try {
-    const resp = await fetch(`${BACKEND_URL}/api/coach`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question, context: contextText || null }),
-      signal: controller.signal,
-    });
-    if (!resp.ok) return null;
-    const data = await resp.json();
-    return data.answer || null;
-  } catch {
-    return null;
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 async function askCoach(question) {
   const btn = document.getElementById("coach-submit-btn");
   btn.disabled = true;
   btn.textContent = "Thinking…";
-  renderCoachResult(`<p class="sq-placeholder">Coach is thinking… (waking up the AI can take up to a minute if it's been idle)</p>`);
+  renderCoachResult(`<p class="sq-placeholder">Coach is thinking…</p>`);
+
+  // Small delay so the result doesn't just flash-replace — same "thinking"
+  // affordance as before, minus the network round-trip.
+  await new Promise(resolve => setTimeout(resolve, 250));
 
   const combined = coachState.contextText ? `${coachState.contextText}\n${question}` : question;
-  const aiAnswer = await fetchAiCoachAnswer(question, coachState.contextText);
-
-  if (aiAnswer) {
-    renderCoachResult(aiCoachAnswerHtml(aiAnswer));
-  } else {
-    renderCoachResult(composeCoachAnswer(combined) +
-      `<p class="sq-placeholder" style="margin-top:8px">(AI coach wasn't reachable just now — showing the built-in coaching library instead.)</p>`);
-  }
+  renderCoachResult(composeCoachAnswer(combined));
 
   btn.disabled = false;
   btn.textContent = "Ask Coach";
