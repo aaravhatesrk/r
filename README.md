@@ -1,4 +1,4 @@
-# Rooted — Cultural Roots, Global Wellness
+# Praxis — Cultural Roots, Global Wellness
 
 Class 12 RIDS group prototype.
 
@@ -21,10 +21,10 @@ A working prototype for a **culturally-adaptive eco-fitness platform** that:
   region — with a clear "not medical advice" disclaimer and an urgent-care redirect
   for anything serious.
 - Organizes a **Community Wellness Hub**: an in-house **Cultural Practice Library**
-  (self-guided practices per country, written by the Rooted team) plus **Community
+  (self-guided practices per country, written by the Praxis team) plus **Community
   Connect**, backed by a real account system and a real shared database (see below)
   so people with different Google accounts, on different devices, can create and join
-  communities together. Rooted has no partnerships or affiliations with any outside
+  communities together. Praxis has no partnerships or affiliations with any outside
   organization — nothing on this site claims one.
 
 Two separate standalone apps are linked from the home page and footer: **Athlyze**
@@ -71,18 +71,18 @@ black box.
 ### Athlyze — a second, standalone site for sports performance analytics
 
 `performance-analyzer/index.html` is a separate, self-contained app (own HTML/CSS/JS,
-own `localStorage` key, no shared state with Rooted) for logging and analyzing sports
+own `localStorage` key, no shared state with Praxis) for logging and analyzing sports
 performance: pick a sport, log a metric (time, distance, weight, score — presets per
 sport plus a fully custom option), and Athlyze tracks personal bests, computes a
 trend line, and charts progress over time per sport/metric combo. It's linked from
-Rooted's home page and footer (opens in a new tab) but works and can be hosted
+Praxis's home page and footer (opens in a new tab) but works and can be hosted
 entirely on its own — just open `performance-analyzer/index.html` directly, or serve
 it the same way as the main site (see "Running it locally" below).
 
 ### PitchIQ — a third, standalone site for football skill & match analysis
 
 `football-analyzer/index.html` is another separate, self-contained app (own HTML/CSS/JS,
-own `localStorage` key, no shared state with Rooted or Athlyze) for reviewing football
+own `localStorage` key, no shared state with Praxis or Athlyze) for reviewing football
 technique and match moments: upload a video clip (it plays back locally in the browser
 tab only — nothing is ever uploaded anywhere) or just describe a passage of play in
 plain text, and PitchIQ matches what you tag or describe against an in-house knowledge
@@ -100,7 +100,7 @@ World Cup, Champions League and other historic finals, each with coaching talkin
 points and a short clip playable on the page) and a **Coach AI** panel — a
 conversational front end over the same rule-based mistake knowledge base, no API key
 or backend required, so it works with zero setup like everything else on the site. It's
-linked from Rooted's home page and footer (opens in a new tab) but works entirely on
+linked from Praxis's home page and footer (opens in a new tab) but works entirely on
 its own — just open `football-analyzer/index.html` directly, or serve it the same way
 as the main site.
 

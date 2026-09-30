@@ -3,6 +3,11 @@
 # Hub's Firebase sign-in on the main site — verify at securityheaders.com and by
 # actually signing in after deploy; if anything breaks, check DevTools > Console for
 # the blocked origin and add it to the relevant directive below.
+#
+# Support chatbot note: the widget is currently disabled in index.html for the demo
+# (its backend was a temporary Cloudflare quick tunnel — NOT stable, would break on
+# restart). To re-enable, restore the config block in index.html with a freshly
+# rotated API key, then add the new permanent backend's origin to connect-src below.
 services:
   - type: web
     name: rooted

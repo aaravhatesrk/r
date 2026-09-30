@@ -168,6 +168,7 @@ function computeAndRenderSq() {
       ${vsPrevious !== null ? `<span class="sq-compare-pill ${vsPrevious >= 0 ? "kpi-good" : "kpi-warn"}">${vsPrevious >= 0 ? "▲" : "▼"} ${Math.abs(vsPrevious)} pt${Math.abs(vsPrevious) === 1 ? "" : "s"} vs. your last score</span>` : ""}
       ${nextTier ? `<span class="sq-compare-pill">${pointsToNextTier} pt${pointsToNextTier === 1 ? "" : "s"} to ${nextTier.badge} ${nextTier.name}</span>` : `<span class="sq-compare-pill kpi-good">Top tier reached</span>`}
     </div>
+    <p class="sq-compare-note">The community average is a seeded, illustrative baseline for this prototype, not live aggregated user data.</p>
 
     <div class="sq-breakdown-detailed">
       ${selections.map(s => `
