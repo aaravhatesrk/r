@@ -24,13 +24,13 @@
    Advisor, dashboard, practice library) works with no backend at all. */
 
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyCkG1qfhpaIZhESMSUjZQwQ7ICT8HCR84c",
-  authDomain: "sacdavs.firebaseapp.com",
-  projectId: "sacdavs",
-  storageBucket: "sacdavs.firebasestorage.app",
-  messagingSenderId: "1037575515051",
-  appId: "1:1037575515051:web:e87ed98fc2e4c1eb77c0ee",
-  measurementId: "G-3DSPLMT778"
+  apiKey: "AIzaSyCwJZVV4utczw0mbf6nZkptmSKbVk8RnbM",
+  authDomain: "rids-973c7.firebaseapp.com",
+  projectId: "rids-973c7",
+  storageBucket: "rids-973c7.firebasestorage.app",
+  messagingSenderId: "935563803594",
+  appId: "1:935563803594:web:a5a690755817339cd5ed33",
+  measurementId: "G-NL72CLTMFM"
 };
 
 const FIREBASE_CONFIG_IS_PLACEHOLDER = FIREBASE_CONFIG.apiKey === "YOUR_API_KEY";
