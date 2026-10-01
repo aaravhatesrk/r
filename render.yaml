@@ -1,4 +1,4 @@
-# CSP note: "rooted" also serves /football-analyzer/ (same staticPublishPath ".").
+# CSP note: "praxis" also serves /football-analyzer/ (same staticPublishPath ".").
 # Its allowances (gstatic, googleapis, accounts.google.com) come from the Community
 # Hub's Firebase sign-in on the main site; google-analytics.com/analytics.google.com
 # from Firebase Analytics (Home tab usage events); checkout/api/cdn.razorpay.com from
@@ -13,7 +13,7 @@
 # rotated API key, then add the new permanent backend's origin to connect-src below.
 services:
   - type: web
-    name: rooted
+    name: praxis
     runtime: static
     buildCommand: ""
     staticPublishPath: .
