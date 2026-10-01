@@ -143,6 +143,29 @@
         everything here is Praxis's own content and your own community.</p>
       </div>
     </div>
+
+    <div class="business-strip">
+      <div class="business-card">
+        <h2>Praxis+ — ₹99/month</h2>
+        <p>Full Cultural Practice Library, SQ history, deeper Advisor pathways.</p>
+        <button type="button" class="btn btn-primary btn-small" id="subscribe-btn">Subscribe (test mode)</button>
+        <p class="business-hint" id="subscribe-hint" hidden></p>
+      </div>
+      <div class="business-card">
+        <h2>Get notified</h2>
+        <p>Leave your email for Praxis+ launch and school workshop updates near you.</p>
+        <form id="notify-form" class="notify-form" novalidate>
+          <input type="email" id="notify-email" placeholder="you@example.com" required autocomplete="email" aria-label="Email address" />
+          <button type="submit" class="btn btn-ghost btn-small">Notify me</button>
+        </form>
+        <p class="business-hint" id="notify-hint" hidden></p>
+      </div>
+      <div class="business-card">
+        <h2>Partner with us</h2>
+        <p>Run a sustainable gear brand, or a school interested in a wellness workshop? We'd like to hear from you.</p>
+        <a class="btn btn-ghost btn-small" href="mailto:ghidorah967@gmail.com?subject=Praxis%20partnership%20inquiry">Become a partner ↗</a>
+      </div>
+    </div>
   </section>
 
   <!-- PROTOTYPE -->
@@ -152,6 +175,14 @@
       Select a country and describe one workout. The engine computes an SQ score from four weighted
       inputs, assigns a tier, and recommends a local cultural wellness practice to pair with it.
     </p>
+
+    <details class="formula-disclosure sq-what-is">
+      <summary>What is SQ?</summary>
+      <p>Your Sustainability Quotient is a transparent 0–100 score built from four weighted inputs —
+      workout type, gear, travel mode to your workout, and post-workout resource use. Each choice has
+      a fixed, published point value, so the score is fully reproducible by hand — nothing hidden,
+      nothing AI-guessed.</p>
+    </details>
 
     <div class="prototype-grid">
       <form id="sq-form" class="sq-form">
@@ -373,13 +404,17 @@
     initializeFirestore, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, collection, query, where,
     orderBy, limit, onSnapshot, runTransaction, serverTimestamp, arrayUnion, arrayRemove
   } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore.js";
+  import { getAnalytics, logEvent } from "https://www.gstatic.com/firebasejs/10.13.2/firebase-analytics.js";
   window.__firebaseModular = {
     initializeApp, getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged,
     initializeFirestore, doc, getDoc, getDocs, setDoc, addDoc, deleteDoc, collection, query, where,
-    orderBy, limit, onSnapshot, runTransaction, serverTimestamp, arrayUnion, arrayRemove
+    orderBy, limit, onSnapshot, runTransaction, serverTimestamp, arrayUnion, arrayRemove,
+    getAnalytics, logEvent
   };
 </script>
 <script src="js/firebase-config.js"></script>
+<script src="js/razorpay-config.js"></script>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 <script src="js/data.js"></script>
 <script src="js/charts.js"></script>
 <script src="js/community.js"></script>

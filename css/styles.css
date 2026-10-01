@@ -293,6 +293,30 @@ main { max-width: 1080px; margin: 0 auto; padding: 28px 20px 60px; }
 .pillar-card h2 { font-size: 16px; color: var(--brand); }
 .pillar-card p { font-size: 13.5px; color: var(--ink-secondary); margin: 0; }
 
+.business-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 16px;
+}
+.business-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: var(--shadow-sm);
+}
+.business-card h2 { font-size: 15px; color: var(--brand); margin: 0 0 6px; }
+.business-card p { font-size: 13px; color: var(--ink-secondary); margin: 0 0 12px; }
+.business-hint { font-size: 12.5px; margin: 10px 0 0 !important; }
+.business-hint.hint-ok { color: var(--good); }
+.business-hint.hint-err { color: var(--bad); }
+.notify-form { display: flex; gap: 8px; flex-wrap: wrap; }
+.notify-form input {
+  flex: 1; min-width: 140px; padding: 8px 10px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg); color: var(--ink); font-size: 13px;
+}
+
 .section-note { color: var(--ink-secondary); max-width: 760px; }
 
 .disclaimer-banner {
@@ -368,6 +392,9 @@ table.scale-table td.neg { color: var(--bad); }
 .sq-bar-fill { height: 100%; background: var(--brand); border-radius: 999px; transition: width 0.4s ease; }
 .sq-reco { background: var(--bg); border-radius: 10px; padding: 14px; margin-bottom: 12px; font-size: 13.5px; }
 .sq-reco h4 { margin: 0 0 6px; font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: .02em; }
+
+.copy-result-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+.copy-confirm { font-size: 12px; color: var(--good); font-weight: 600; }
 
 .sq-history { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; color: var(--brand); }
 .sq-history-lbl { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: .03em; }

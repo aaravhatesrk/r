@@ -1,8 +1,11 @@
 # CSP note: "rooted" also serves /football-analyzer/ (same staticPublishPath ".").
 # Its allowances (gstatic, googleapis, accounts.google.com) come from the Community
-# Hub's Firebase sign-in on the main site — verify at securityheaders.com and by
-# actually signing in after deploy; if anything breaks, check DevTools > Console for
-# the blocked origin and add it to the relevant directive below.
+# Hub's Firebase sign-in on the main site; google-analytics.com/analytics.google.com
+# from Firebase Analytics (Home tab usage events); checkout/api/cdn.razorpay.com from
+# the Praxis+ test-mode checkout button (js/razorpay-config.js) — verify at
+# securityheaders.com and by actually signing in / checking out after deploy; if
+# anything breaks, check DevTools > Console for the blocked origin and add it to the
+# relevant directive below.
 #
 # Support chatbot note: the widget is currently disabled in index.html for the demo
 # (its backend was a temporary Cloudflare quick tunnel — NOT stable, would break on
@@ -30,7 +33,7 @@ services:
         value: camera=(), microphone=(), geolocation=()
       - path: /*
         name: Content-Security-Policy
-        value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.googleusercontent.com; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://firebaseinstallations.googleapis.com; frame-src https://accounts.google.com https://sacdavs.firebaseapp.com; object-src 'none'; base-uri 'self'"
+        value: "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.gstatic.com https://apis.google.com https://checkout.razorpay.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://*.googleusercontent.com https://cdn.razorpay.com; connect-src 'self' https://firestore.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com https://firebaseinstallations.googleapis.com https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com https://api.razorpay.com https://lumberjack.razorpay.com; frame-src https://accounts.google.com https://sacdavs.firebaseapp.com https://api.razorpay.com; object-src 'none'; base-uri 'self'"
 
   - type: web
     name: athlyze

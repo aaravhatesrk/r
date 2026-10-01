@@ -153,6 +153,15 @@ This takes about 5 minutes and is free for a project at this scale.
    rules_version = '2';
    service cloud.firestore {
      match /databases/{database}/documents {
+       match /waitlist/{entryId} {
+         allow read, update, delete: if false;
+         allow create: if request.resource.data.keys().hasOnly(["email", "source", "createdAt"])
+           && request.resource.data.email is string
+           && request.resource.data.email.size() > 3
+           && request.resource.data.email.size() < 200
+           && request.resource.data.email.matches(".+@.+[.].+");
+       }
+
        match /communities/{communityCode} {
          allow read: if request.auth != null;
          allow create: if request.auth != null
@@ -190,7 +199,10 @@ This takes about 5 minutes and is free for a project at this scale.
    }
    ```
 
-   This means: only signed-in members can read or write; you can only create a community
+   This means: the Home tab's "notify me" field can be written by anyone (no sign-in — it's
+   a pre-signup lead capture) but never read, changed or deleted back out through the client
+   SDK, so view signups from the Firebase console, not the website. For communities: only
+   signed-in members can read or write; you can only create a community
    naming yourself as the owner and sole starting member; updates to a community can only
    touch the membership fields (join/leave), never rewrite the name, description or owner;
    only the owner can delete a community; and within it, only current members can post to
@@ -215,6 +227,21 @@ This takes about 5 minutes and is free for a project at this scale.
 Once `js/firebase-config.js` has real values, Community Connect switches on
 automatically — until then, the Community Hub tab shows an on-page notice instead of
 silently failing, and every other tab works normally regardless.
+
+## Setting up the Praxis+ test checkout
+
+The Home tab's "Subscribe (test mode)" button uses Razorpay Checkout. Like Firebase, it
+needs a free key before it does anything beyond showing an on-page setup notice:
+
+1. [dashboard.razorpay.com/signup](https://dashboard.razorpay.com/signup) — email/phone
+   only, no business documents needed for test mode.
+2. **Settings → API Keys → Generate Test Key.**
+3. Copy the Key ID (starts `rzp_test_`) into `js/razorpay-config.js`, replacing the
+   placeholder. Never put the Key Secret there — that's a server-side value and this
+   file ships to every visitor's browser.
+
+Test-mode checkouts never move real money — use Razorpay's published test card numbers
+at the payment screen.
 
 ## Coach AI (PitchIQ)
 

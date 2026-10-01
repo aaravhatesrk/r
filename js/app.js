@@ -36,6 +36,7 @@ function switchTab(tab) {
   });
   if (tab === "dashboard") renderDashboardCharts();
   window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+  logAnalyticsEvent("select_tab", { tab_name: tab });
 }
 
 function initTabs() {
@@ -53,6 +54,33 @@ function initTabs() {
 function debounce(fn, ms) {
   let t;
   return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), ms); };
+}
+
+/* ---------- Copy/share result (SQ + Advisor) ---------- */
+function fallbackCopyText(text) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  try { document.execCommand("copy"); } catch { /* best effort */ }
+  document.body.removeChild(ta);
+}
+
+function copyResultText(text, confirmElId) {
+  const confirmEl = document.getElementById(confirmElId);
+  const showConfirm = () => {
+    if (!confirmEl) return;
+    confirmEl.hidden = false;
+    setTimeout(() => { confirmEl.hidden = true; }, 2500);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(showConfirm).catch(() => { fallbackCopyText(text); showConfirm(); });
+  } else {
+    fallbackCopyText(text);
+    showConfirm();
+  }
 }
 
 /* ---------- Home ---------- */
@@ -199,7 +227,22 @@ function computeAndRenderSq() {
       <h4>Recommended cultural practice — ${country.name}</h4>
       <p style="margin:0">${practice}</p>
     </div>
+
+    <div class="copy-result-row">
+      <button type="button" class="btn btn-ghost btn-small" id="sq-copy-btn">Copy my result</button>
+      <span class="copy-confirm" id="sq-copy-confirm" hidden>Copied!</span>
+    </div>
   `;
+
+  const copyBtn = document.getElementById("sq-copy-btn");
+  if (copyBtn) {
+    copyBtn.addEventListener("click", () => {
+      const shareText = `My Praxis Sustainability Quotient: ${score}/100 (${tier.name}), training the ${country.name} way. Try it: https://praxis-35ef.onrender.com/`;
+      copyResultText(shareText, "sq-copy-confirm");
+      logAnalyticsEvent("share_result", { tool: "sq", score });
+    });
+  }
+  logAnalyticsEvent("sq_calculated", { country: countryId, score, tier: tier.name });
 }
 
 function renderFormulaExplainer() {
@@ -274,6 +317,7 @@ function computeAndRenderAdvice() {
             <p>${CULTURAL_PRACTICES[c.id]}</p>
           </div>`).join("")}
       </div>`;
+    logAnalyticsEvent("advisor_submitted", { matched: false });
     return;
   }
 
@@ -331,7 +375,22 @@ function computeAndRenderAdvice() {
 
     ${renderConcernBlock(primary, true)}
     ${secondary.map(s => renderConcernBlock(s, false)).join("")}
+
+    <div class="copy-result-row">
+      <button type="button" class="btn btn-ghost btn-small" id="advisor-copy-btn">Copy my result</button>
+      <span class="copy-confirm" id="advisor-copy-confirm" hidden>Copied!</span>
+    </div>
   `;
+
+  const advisorCopyBtn = document.getElementById("advisor-copy-btn");
+  if (advisorCopyBtn) {
+    advisorCopyBtn.addEventListener("click", () => {
+      const shareText = `Praxis Wellness Advisor matched me to "${primary.concern.label}" (${intensity.level}) — try it: https://praxis-35ef.onrender.com/`;
+      copyResultText(shareText, "advisor-copy-confirm");
+      logAnalyticsEvent("share_result", { tool: "advisor" });
+    });
+  }
+  logAnalyticsEvent("advisor_submitted", { matched: true, primary_concern: primary.concern.id, intensity: intensity.level });
 }
 
 /* ---------- Community Hub: self-guided Cultural Practice Library ----------
@@ -382,6 +441,75 @@ function renderCommunityGrid() {
         <ul class="programs-list">${entry.items.map(i => `<li><strong>${i.label}:</strong> ${i.text}</li>`).join("")}</ul>
       </div>`;
   }).join("");
+}
+
+/* ---------- Business: Praxis+ subscribe, notify-me, analytics helper ----------
+   logAnalyticsEvent is defined in js/community.js (it owns the Firebase app
+   instance); it's a safe no-op if Firebase/analytics isn't ready yet. */
+function initBusinessStrip() {
+  const notifyForm = document.getElementById("notify-form");
+  if (notifyForm) notifyForm.addEventListener("submit", handleNotifySubmit);
+
+  const subscribeBtn = document.getElementById("subscribe-btn");
+  if (subscribeBtn) subscribeBtn.addEventListener("click", handleSubscribeClick);
+}
+
+function showBusinessHint(elId, text, ok) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.textContent = text;
+  el.className = "business-hint " + (ok ? "hint-ok" : "hint-err");
+  el.hidden = false;
+}
+
+async function handleNotifySubmit(e) {
+  e.preventDefault();
+  const input = document.getElementById("notify-email");
+  if (!input.checkValidity()) { input.reportValidity(); return; }
+
+  if (!connectState.firebaseReady || !connectState.db) {
+    showBusinessHint("notify-hint", "This feature needs Firebase set up first — see js/firebase-config.js.", false);
+    return;
+  }
+  const fx = window.__firebaseModular;
+  try {
+    await fx.addDoc(fx.collection(connectState.db, "waitlist"), {
+      email: input.value.trim().toLowerCase(),
+      source: "home_notify_form",
+      createdAt: fx.serverTimestamp()
+    });
+    showBusinessHint("notify-hint", "Thanks — we'll email you when it's ready.", true);
+    input.value = "";
+    logAnalyticsEvent("notify_signup", {});
+  } catch (err) {
+    console.error("Notify-me signup failed:", err);
+    showBusinessHint("notify-hint", "Something went wrong — please try again.", false);
+  }
+}
+
+function handleSubscribeClick() {
+  logAnalyticsEvent("subscribe_click", {});
+  if (typeof RAZORPAY_CONFIG_IS_PLACEHOLDER === "undefined" || RAZORPAY_CONFIG_IS_PLACEHOLDER) {
+    showBusinessHint("subscribe-hint", "Payments aren't configured for this demo yet — see js/razorpay-config.js.", false);
+    return;
+  }
+  if (typeof window.Razorpay === "undefined") {
+    showBusinessHint("subscribe-hint", "Checkout couldn't load — check your connection and try again.", false);
+    return;
+  }
+  const rzp = new window.Razorpay({
+    key: RAZORPAY_KEY_ID,
+    amount: 9900,
+    currency: "INR",
+    name: "Praxis",
+    description: "Praxis+ monthly subscription (test mode)",
+    handler: function (response) {
+      showBusinessHint("subscribe-hint", `Test payment successful — ID: ${response.razorpay_payment_id}`, true);
+      logAnalyticsEvent("subscribe_test_payment_success", {});
+    },
+    theme: { color: "#015734" }
+  });
+  rzp.open();
 }
 
 /* ---------- Dashboard ---------- */
@@ -454,6 +582,7 @@ document.addEventListener("DOMContentLoaded", () => {
   renderCountryStrip();
   initSqForm();
   initAdvisor();
+  initBusinessStrip();
   initCommunityConnect();
   renderCommunityFilters();
   renderCommunityGrid();

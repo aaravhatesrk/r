@@ -15,6 +15,7 @@ const connectState = {
   firebaseReady: false,
   auth: null,
   db: null,
+  analytics: null,
   currentUser: null,
   unsubscribeMyCommunities: null,
   pendingInviteCode: null,
@@ -71,12 +72,22 @@ function initFirebase(databaseId) {
     connectState.db = databaseId === "(default)"
       ? fx.initializeFirestore(app, settings)
       : fx.initializeFirestore(app, settings, databaseId);
+    if (typeof fx.getAnalytics === "function") {
+      try { connectState.analytics = fx.getAnalytics(app); } catch { connectState.analytics = null; }
+    }
     connectState.firebaseReady = true;
     return true;
   } catch (err) {
     console.error("Firebase failed to initialize:", err);
     return false;
   }
+}
+
+/* Safe no-op if analytics isn't ready yet (placeholder config, or the async
+   init in initCommunityConnect hasn't resolved). Used from js/app.js. */
+function logAnalyticsEvent(name, params) {
+  if (!connectState.analytics || !window.__firebaseModular || typeof window.__firebaseModular.logEvent !== "function") return;
+  try { window.__firebaseModular.logEvent(connectState.analytics, name, params || {}); } catch { /* best effort */ }
 }
 
 function showSetupBanner() {
